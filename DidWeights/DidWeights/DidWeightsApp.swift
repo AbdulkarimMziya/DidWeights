@@ -5,7 +5,9 @@
 //  Created by Abdulkarim Mziya on 2026-06-06.
 //
 
+import SwiftData
 import SwiftUI
+
 
 @main
 struct DidWeightsApp: App {
@@ -13,5 +15,6 @@ struct DidWeightsApp: App {
         WindowGroup {
             ContentView()
         }
+        .modelContainer(for: [Exercise.self, SavedWorkout.self, Workout.self])
     }
 }
