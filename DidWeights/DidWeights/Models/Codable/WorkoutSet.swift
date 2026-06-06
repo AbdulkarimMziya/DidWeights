@@ -8,7 +8,7 @@
 import Foundation
 
 struct WorkoutSet: Codable, Identifiable {
-    var id: UUID
+    var id = UUID()
     
     var reps: Int?
     var weight: Double?
