@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftUI
+import SwiftData
 
 @Observable
 class WorkoutManager {
@@ -23,10 +24,28 @@ class WorkoutManager {
     
     // MARK: End Workout
     func finishWorkout() {
-        // TODO: Save to swiftData
+        guard let activeWorkout else { return }
         
-        // Clear active Workout
-        self.activeWorkout = nil
+        do {
+            
+            let data = try PersistanceHelper.transformToData(activeWorkout)
+            
+            let persistWorkout = Workout(
+                startDate: activeWorkout.startDate,
+                endDate: Date(),
+                workoutData: data
+            )
+            
+            // Save in model Container
+            // modelContext.insert(persistWorkout)
+            
+            // Clear active Workout
+            self.activeWorkout = nil
+        } catch {
+            print("Failed to save session record: \(error)")
+        }
+        
+        
     }
     
     
