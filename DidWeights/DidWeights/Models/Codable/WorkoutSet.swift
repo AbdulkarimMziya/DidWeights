@@ -12,4 +12,6 @@ struct WorkoutSet: Codable, Identifiable {
     
     var reps: Int?
     var weight: Double?
+    
+    var isCompleted = false
 }
