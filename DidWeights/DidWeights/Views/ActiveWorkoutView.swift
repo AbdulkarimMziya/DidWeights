@@ -135,6 +135,7 @@ struct ExerciseRowView: View {
                     .foregroundStyle(.blue)
                     .frame(width: 50)
                     .multilineTextAlignment(.center)
+                    .clipShape(.capsule)
                     .overlay(
                         Capsule()
                             .stroke(.blue, lineWidth: 1)
@@ -156,6 +157,7 @@ struct ExerciseRowView: View {
                     .foregroundStyle(.blue)
                     .frame(width: 50)
                     .multilineTextAlignment(.center)
+                    .clipShape(.capsule)
                     .overlay(
                         Capsule()
                             .stroke(.blue, lineWidth: 1)
@@ -164,7 +166,9 @@ struct ExerciseRowView: View {
                     Spacer()
                     
                     Button {
-                        workSet.isCompleted.toggle()
+                        if workSet.canBeCompleted {
+                            workSet.isCompleted.toggle()
+                        }
                     } label: {
                         Image(systemName: workSet.isCompleted ? "checkmark.square.fill" :  "square")
                             .font(.title2)
@@ -183,6 +187,11 @@ struct ExerciseRowView: View {
                 .background(workSet.isCompleted ? Color(.systemGreen).opacity(0.15) : Color.clear)
                 // 4. Offset layout margins to match parent padding context
                 .padding(.horizontal, -12)
+                .onChange(of: workSet.canBeCompleted) { _ , canComplete in
+                    if !canComplete {
+                        workSet.isCompleted = false
+                    }
+                }
                 
                 
                 
