@@ -77,9 +77,40 @@ struct ExerciseRowView: View {
     @Binding var exercise: LoggedExercise
     
     var body: some View {
-        VStack(alignment: .leading) {
-            Text(exercise.exerciseName)
-                .font(.headline)
+        VStack(alignment: .leading, spacing: 16) {
+            HStack(alignment: .center) {
+                Text(exercise.exerciseName)
+                    .font(.headline)
+                    .lineLimit(2)
+                    .frame(maxWidth: 200, alignment: .leading)
+                
+                Spacer()
+                
+                Menu {
+                    // TODO: Exercise menu logic
+                    
+                    Button(role: .destructive) {
+                        // TODO: Delete Exercise logic
+                    } label: {
+                        Label("Remove Exercise", systemImage: "trash")
+                    }
+                    
+                } label: {
+                    Image(systemName: "ellipsis")
+                        .font(.system(size: 28))
+                        .foregroundStyle(.white)
+                        .frame(width: 40, height: 24, alignment: .center)
+                        .background(.secondary)
+                        .clipShape(.capsule)
+                        .contentShape(.capsule)
+                        
+                        
+                }
+                .fixedSize()
+
+            }
+            .padding(.horizontal,4)
+            
             
             // Grid Headers
             HStack {
@@ -199,23 +230,26 @@ struct ExerciseRowView: View {
             
             VStack {
                 HStack(spacing: 12) {
-                    // 1. DELETE BUTTON
-                    Button(role: .destructive) {
-                        // Action to handle deleting a set (e.g., removing the last set entry)
-                        if !exercise.sets.isEmpty {
-                            exercise.sets.removeLast()
+                    
+                    if exercise.sets.count != 0 {
+                        // 1. DELETE BUTTON
+                        Button(role: .destructive) {
+                            // Action to handle deleting a set (e.g., removing the last set entry)
+                            if !exercise.sets.isEmpty {
+                                exercise.sets.removeLast()
+                            }
+                        } label: {
+                            HStack {
+                                Spacer()
+                                Label("Delete Set", systemImage: "trash")
+                                    .font(.subheadline)
+                                    .fontWeight(.medium)
+                                Spacer()
+                            }
+                            .padding(.vertical, 8)
+                            .background(Color.red.opacity(0.15))
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
                         }
-                    } label: {
-                        HStack {
-                            Spacer()
-                            Label("Delete Set", systemImage: "trash")
-                                .font(.subheadline)
-                                .fontWeight(.medium)
-                            Spacer()
-                        }
-                        .padding(.vertical, 8)
-                        .background(Color.red.opacity(0.15))
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
                     }
                     
                     // 2. ADD BUTTON
