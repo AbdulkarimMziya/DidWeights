@@ -224,18 +224,8 @@ struct ExerciseActionsView: View {
 
             if setCount > 0 {
                 Button(role: .destructive) {
-
-                    guard let lastSetID =
-                        manager.activeWorkout?
-                            .exercises
-                            .first(where: { $0.id == exerciseID })?
-                            .sets
-                            .last?
-                            .id
-                    else { return }
-                    
-                    // Manager: Remove Set
-                    manager.removeSet(from: exerciseID, setID: lastSetID)
+                    // Manager: Remove Last Set
+                    manager.removeLastSet(from: exerciseID)
 
                 } label: {
                     Spacer()
@@ -455,11 +445,9 @@ struct ActionButtonView: View {
     var body: some View {
         VStack(spacing: 12) {
             Button {
-                // TODO: Open add exercise flow
-                let sampleExercise = LoggedExercise(exerciseID: UUID(), exerciseName: "")
                 
                 // Manager: Add Exercise
-                manager.addExercise(sampleExercise)
+                manager.addExercise()
             } label: {
                 Text("Add Exercise")
                     .font(.system(size: 20, weight: .bold))
@@ -506,10 +494,8 @@ struct ActionButtonView: View {
     // 3. (Optional) Populate with a sample exercise so it's not empty in your canvas
     let sampleExercise = LoggedExercise(exerciseID: UUID(), exerciseName: "Bench Press")
     
-    mockManager.addExercise(sampleExercise)
-    if let exerciseId = mockManager.activeWorkout?.exercises.first?.id {
-        mockManager.addSet(to: exerciseId)
-    }
+    mockManager.addExercise()
+   
 
     return ActiveWorkoutView()
         .environment(mockManager) // 4. Inject it here

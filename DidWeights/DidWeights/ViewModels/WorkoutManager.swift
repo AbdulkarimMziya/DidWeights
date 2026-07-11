@@ -71,8 +71,9 @@ class WorkoutManager {
      **/
     
     // Add Exercise
-    func addExercise(_ exercise: LoggedExercise) {
-        self.activeWorkout?.exercises.append(exercise)
+    func addExercise() {
+        let newExercise = LoggedExercise(exerciseID: UUID(), exerciseName: "")
+        self.activeWorkout?.exercises.append(newExercise)
     }
     
     // Remove Exercise
@@ -87,6 +88,7 @@ class WorkoutManager {
     /**
      * func addSet()
      * func removeSet()
+     * func removeLastSet()
      * func toggleSetCompletion()
      * func updateWeight()
      * func updateReps()
@@ -107,6 +109,16 @@ class WorkoutManager {
         else { return }
         
         self.activeWorkout?.exercises[exIndex].sets.remove(at: setIndex)
+    }
+    
+    // Remove Last Set from Workout Exercises
+    func removeLastSet(from exerciseID: UUID) {
+        guard
+            let exerciseIndex = exerciseIndex(for: exerciseID),
+            !activeWorkout!.exercises[exerciseIndex].sets.isEmpty
+        else { return }
+
+        activeWorkout?.exercises[exerciseIndex].sets.removeLast()
     }
     
     // Toggle Completion for each set
