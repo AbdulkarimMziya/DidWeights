@@ -8,8 +8,11 @@
 import SwiftUI
 
 struct ContentView: View {
+    @State private var manager = WorkoutManager()
+    
     var body: some View {
-        ActiveWorkoutView()
+        HomeView()
+            .environment(manager)
     }
 }
 
