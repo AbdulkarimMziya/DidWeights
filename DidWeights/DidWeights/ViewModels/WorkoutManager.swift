@@ -12,17 +12,27 @@ import SwiftData
 @Observable
 class WorkoutManager {
     
+    // MARK: State
     var activeWorkout: LoggedWorkout?
+    var isWorkoutActive: Bool = false
     
     
-    // MARK: Start Workout
+    // MARK: Session
+    /**
+     * func startWorkout()
+     * func finishWorkout()
+     * func cancelWorkout()
+     **/
+    
+    // Start Workout
     func startWorkout() {
         guard activeWorkout == nil else { return }
+        
+        self.isWorkoutActive = true
         self.activeWorkout = LoggedWorkout(startDate: Date())
     }
     
-    
-    // MARK: End Workout
+    // End Workout
     func finishWorkout() {
         guard let activeWorkout else { return }
         
@@ -41,25 +51,31 @@ class WorkoutManager {
             
             // Clear active Workout
             self.activeWorkout = nil
+            self.isWorkoutActive = false
         } catch {
             print("Failed to save session record: \(error)")
         }
-        
-        
+    }
+    
+    // Cancel Workout
+    func cancelWorkout() {
+        self.activeWorkout = nil
+        self.isWorkoutActive = false
     }
     
     
-    // MARK: Add Exercise
-    func addExercise(_ exercise: Exercise) {
-        let loggedExercise = LoggedExercise(
-            exerciseID: exercise.id,
-            exerciseName: exercise.name
-        )
-        
-        self.activeWorkout?.exercises.append(loggedExercise)
+    // MARK: Exercises
+    /**
+     * func addExercise()
+     * func removeExercise()
+     **/
+    
+    // Add Exercise
+    func addExercise(_ exercise: LoggedExercise) {
+        self.activeWorkout?.exercises.append(exercise)
     }
     
-    // MARK: Remove Exercise
+    // Remove Exercise
     func removeExercise(withID id: UUID) {
         guard let exIndex = exerciseIndex(for: id) else { return }
         
@@ -67,7 +83,16 @@ class WorkoutManager {
     }
     
     
-    // MARK: Add Set into Workout Exercises
+    // MARK: Add,Remove,Update Set into Workout Exercises
+    /**
+     * func addSet()
+     * func removeSet()
+     * func toggleSetCompletion()
+     * func updateWeight()
+     * func updateReps()
+     * func updateExerciseName()
+     **/
+    // Add Set to each exercise
     func addSet(to exerciseID: UUID) {
         guard let exIndex = exerciseIndex(for: exerciseID) else { return }
         
@@ -75,7 +100,7 @@ class WorkoutManager {
         self.activeWorkout?.exercises[exIndex].sets.append(workoutSet)
     }
     
-    // MARK: Remove Set from Workout Exercises
+    // Remove Set from Workout Exercises
     func removeSet(from exerciseID: UUID, setID: UUID) {
         guard let exIndex = exerciseIndex(for: exerciseID),
               let setIndex = setIndex(exerciseIndex: exIndex, setID: setID)
@@ -84,15 +109,46 @@ class WorkoutManager {
         self.activeWorkout?.exercises[exIndex].sets.remove(at: setIndex)
     }
     
-    // MARK: Update Set within Workout Exercises
-    func updateSet(exerciseID: UUID, setID: UUID, reps: Int?, weight: Double?) {
+    // Toggle Completion for each set
+    func toggleSetCompletion(exerciseID: UUID, setID: UUID ) {
         guard
             let exIndex = exerciseIndex(for: exerciseID),
             let setIndex = setIndex(exerciseIndex: exIndex, setID: setID)
         else { return }
         
-        self.activeWorkout?.exercises[exIndex].sets[setIndex].reps = reps
-        self.activeWorkout?.exercises[exIndex].sets[setIndex].weight = weight
+//        let reps = activeWorkout?.exercises[exIndex].sets[setIndex].reps ?? 0
+//        guard reps >= 1 else {
+//            print("Cannot complete a set with 0 reps.")
+//            return
+//        }
+
+        self.activeWorkout?.exercises[exIndex].sets[setIndex].isCompleted.toggle()
+    }
+    
+    func updateWeight(exerciseID: UUID, setID: UUID, weight: Double?) {
+        guard
+            let exIndex = exerciseIndex(for: exerciseID),
+            let setIndex = setIndex(exerciseIndex: exIndex, setID: setID)
+        else { return }
+
+        activeWorkout?.exercises[exIndex].sets[setIndex].weight = weight
+    }
+    
+    func updateReps(exerciseID: UUID, setID: UUID, reps: Int?) {
+        guard
+            let exIndex = exerciseIndex(for: exerciseID),
+            let setIndex = setIndex(exerciseIndex: exIndex, setID: setID)
+        else { return }
+
+        activeWorkout?.exercises[exIndex].sets[setIndex].reps = reps
+    }
+    
+    func updateExerciseName(exerciseID: UUID, name: String) {
+        guard
+            let exIndex = exerciseIndex(for: exerciseID)
+        else { return }
+        
+        activeWorkout?.exercises[exIndex].exerciseName = name
     }
     
     // Helper Functions
