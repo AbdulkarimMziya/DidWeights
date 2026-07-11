@@ -8,6 +8,9 @@
 import SwiftUI
 
 struct HomeView: View {
+    @Environment(WorkoutManager.self) private var manager
+    
+    @State private var presentWorkout = false
     
     let columns = [
         GridItem(.flexible(), spacing: 16),
@@ -26,6 +29,8 @@ struct HomeView: View {
                         
                         Button {
                             // TODO: Start Empty Workout Action
+                            presentWorkout = true
+                            manager.startWorkout()
                         } label: {
                             Text("Start an Empty Workout")
                                 .font(.system(size: 18, weight: .semibold))
@@ -84,6 +89,9 @@ struct HomeView: View {
             .scrollBounceBehavior(.always)
             .navigationTitle("Start Workout")
             .preferredColorScheme(.dark)
+            .sheet(isPresented: $presentWorkout) {
+                ActiveWorkoutView()
+            }
         }
     }
 }
@@ -131,5 +139,9 @@ struct WorkoutTemplateCard: View {
 
 
 #Preview {
+    // 1. Create a preview instance
+    let mockManager = WorkoutManager()
+    
     HomeView()
+        .environment(mockManager)
 }

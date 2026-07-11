@@ -14,4 +14,5 @@ struct WorkoutSet: Codable, Identifiable {
     var weight: Double?
     
     var isCompleted = false
+    
 }
