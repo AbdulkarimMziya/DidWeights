@@ -29,15 +29,15 @@ struct HomeView: View {
                         
                         Button {
                             // TODO: Start Empty Workout Action
-                            presentWorkout = true
                             manager.startWorkout()
+                            presentWorkout = true
                         } label: {
-                            Text("Start an Empty Workout")
+                            Text(manager.activeWorkout == nil ? "Start an Empty Workout" : "Resume Workout")
                                 .font(.system(size: 18, weight: .semibold))
                                 .foregroundStyle(.white)
                                 .padding(.vertical, 14)
                                 .frame(maxWidth: .infinity, alignment: .center)
-                                .background(Color(.systemBlue).gradient)
+                                .background(manager.activeWorkout == nil ? Color(.systemBlue).gradient : Color(.systemGreen).gradient)
                                 .clipShape(RoundedRectangle(cornerRadius: 12))
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 12)

@@ -13,9 +13,48 @@ import SwiftData
 class WorkoutManager {
     
     // MARK: State
-    var activeWorkout: LoggedWorkout?
+    var activeWorkout: LoggedWorkout? {
+        didSet {
+            persistActiveWorkout()
+        }
+    }
+    
     var isWorkoutActive: Bool = false
     
+    private let activeWorkoutKey = "com.didweights.activeWorkoutDraft"
+    
+    init() {
+        restoreActiveWorkout()
+    }
+
+    
+    // MARK: Persistence for in-progress draft
+    private func persistActiveWorkout() {
+        guard let activeWorkout else {
+            UserDefaults.standard.removeObject(forKey: activeWorkoutKey)
+            return
+        }
+        
+        do {
+            let data = try PersistanceHelper.transformToData(activeWorkout)
+            UserDefaults.standard.set(data, forKey: activeWorkoutKey)
+        } catch {
+            print("Failed to persist active workout: \(error)")
+        }
+    }
+
+    private func restoreActiveWorkout() {
+        guard let data = UserDefaults.standard.data(forKey: activeWorkoutKey) else { return }
+        
+        do {
+            let restored = try PersistanceHelper.transformFromData(data)
+            self.activeWorkout = restored
+            self.isWorkoutActive = true
+        } catch {
+            print("Failed to restore active workout: \(error)")
+            UserDefaults.standard.removeObject(forKey: activeWorkoutKey)
+        }
+    }
     
     // MARK: Session
     /**
