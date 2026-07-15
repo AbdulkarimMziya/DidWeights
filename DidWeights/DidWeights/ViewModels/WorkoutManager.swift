@@ -71,6 +71,32 @@ class WorkoutManager {
         self.activeWorkout = LoggedWorkout(startDate: Date())
     }
     
+    func startWorkout(from savedWorkout: SavedWorkout) {
+        guard activeWorkout == nil else { return }
+
+        do {
+            let template = try PersistanceHelper.transformFromData(savedWorkout.workoutData)
+
+            // Fresh session identity, but keep the exercise/set structure from the plan
+            let newWorkout = LoggedWorkout(
+                id: UUID(),
+                startDate: Date(),
+                exercises: template.exercises.map { exercise in
+                    LoggedExercise(
+                        exerciseID: exercise.exerciseID,
+                        exerciseName: exercise.exerciseName,
+                        sets: exercise.sets.map { _ in WorkoutSet(reps: nil, weight: nil) }
+                    )
+                }
+            )
+
+            self.activeWorkout = newWorkout
+            self.isWorkoutActive = true
+        } catch {
+            print("Failed to load workout plan: \(error)")
+        }
+    }
+    
     // End Workout
     func finishWorkout() {
         guard let activeWorkout else { return }

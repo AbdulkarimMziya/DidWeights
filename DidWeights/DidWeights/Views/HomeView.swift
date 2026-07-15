@@ -5,12 +5,16 @@
 //  Created by Abdulkarim Mziya on 2026-06-19.
 //
 
+import SwiftData
 import SwiftUI
 
 struct HomeView: View {
     @Environment(WorkoutManager.self) private var manager
+    @Environment(\.modelContext) private var modelContext
+    @Query(sort: \SavedWorkout.name) private var savedPlans: [SavedWorkout]
     
     @State private var presentWorkout = false
+    @State private var presentCreatePlan = false
     
     let columns = [
         GridItem(.flexible(), spacing: 16),
@@ -60,6 +64,7 @@ struct HomeView: View {
                             
                             Button {
                                 // TODO: Create Plan
+                                presentCreatePlan = true
                             } label: {
                                 Image(systemName: "plus")
                                     .font(.system(size: 20, weight: .semibold))
@@ -67,16 +72,17 @@ struct HomeView: View {
                                     .padding(10)
                                     .background(.secondary, in: .circle)
                             }
-
                         }
                         
                         // Workout Plan grids
                         LazyVGrid(columns: columns, spacing: 16) {
-                            ForEach(sampleTemplates) { template in
+                            ForEach(savedPlans) { plan in
                                 Button {
-                                    //TODO: Action to open or start template
+                                    // TODO: Action to open or start template
+                                    manager.startWorkout(from: plan)
+                                    presentWorkout = true
                                 } label: {
-                                    WorkoutTemplateCard(template: template)
+                                    WorkoutTemplateCard(plan: plan)
                                 }
                                 .buttonStyle(.plain)
                             }
@@ -92,34 +98,38 @@ struct HomeView: View {
             .sheet(isPresented: $presentWorkout) {
                 ActiveWorkoutView()
             }
+            .sheet(isPresented: $presentCreatePlan) {
+                CreatePlanView()
+            }
         }
     }
 }
 
 
 
-
 struct WorkoutTemplateCard: View {
-    let template: WorkoutTemplate
-    
+    let plan: SavedWorkout
+
+    private var exerciseCount: Int {
+        (try? PersistanceHelper.transformFromData(plan.workoutData))?.exercises.count ?? 0
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            // Title
-            Text(template.name)
+            Text(plan.name)
                 .font(.headline)
                 .foregroundStyle(.primary)
                 .lineLimit(1)
-            
+
             Spacer(minLength: 0)
-            
-            // Exercise Count and Last Active Metadata
+
             VStack(alignment: .leading, spacing: 4) {
-                Text("\(template.exerciseCount) exercises")
+                Text("\(exerciseCount) exercises")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
-                
+
                 Group {
-                    if let lastActive = template.lastActive {
+                    if let lastActive = plan.lastActive {
                         Text("Active: \(lastActive, style: .date)")
                     } else {
                         Text("Never active")
@@ -136,7 +146,6 @@ struct WorkoutTemplateCard: View {
         .shadow(color: .black.opacity(0.25), radius: 5, x: 0, y: 2)
     }
 }
-
 
 #Preview {
     // 1. Create a preview instance
