@@ -15,6 +15,9 @@ struct HomeView: View {
     
     @State private var presentWorkout = false
     @State private var presentCreatePlan = false
+    @State private var selectedPlan: SavedWorkout?
+    @State private var planPendingEdit: SavedWorkout?
+    @State private var planPendingDelete: SavedWorkout?
     
     let columns = [
         GridItem(.flexible(), spacing: 16),
@@ -77,17 +80,60 @@ struct HomeView: View {
                         // Workout Plan grids
                         LazyVGrid(columns: columns, spacing: 16) {
                             ForEach(savedPlans) { plan in
-                                Button {
-                                    // TODO: Action to open or start template
-                                    manager.startWorkout(from: plan)
-                                    presentWorkout = true
-                                } label: {
-                                    WorkoutTemplateCard(plan: plan)
-                                }
-                                .buttonStyle(.plain)
+                                WorkoutTemplateCard(plan: plan)
+                                    .onTapGesture {
+                                        selectedPlan = plan
+                                    }
                             }
                         }
+                        .confirmationDialog(
+                            selectedPlan?.name ?? "Plan",
+                            isPresented: Binding(
+                                get: { selectedPlan != nil },
+                                set: { if !$0 { selectedPlan = nil } }
+                            ),
+                            titleVisibility: .visible
+                        ) {
+                            if let plan = selectedPlan {
+                                Button("Start Workout") {
+                                    manager.startWorkout(from: plan)
+                                    presentWorkout = true
+                                    selectedPlan = nil
+                                }
+                                Button("Edit Plan") {
+                                    planPendingEdit = plan
+                                    selectedPlan = nil
+                                }
+                                Button("Delete Plan", role: .destructive) {
+                                    planPendingDelete = plan
+                                    selectedPlan = nil
+                                }
+                                Button("Cancel", role: .cancel) {
+                                    selectedPlan = nil
+                                }
+                            }
+                        }
+                        .alert(
+                                "Delete \(planPendingDelete?.name ?? "Plan")?",
+                                isPresented: Binding(
+                                    get: { planPendingDelete != nil },
+                                    set: { if !$0 { planPendingDelete = nil } }
+                                )
+                            ) {
+                                Button("Delete", role: .destructive) {
+                                    if let plan = planPendingDelete {
+                                        modelContext.delete(plan)
+                                    }
+                                    planPendingDelete = nil
+                                }
+                                Button("Cancel", role: .cancel) {
+                                    planPendingDelete = nil
+                                }
+                            } message: {
+                                Text("This can't be undone.")
+                            }
                     }
+                    
                 }
                 .padding()
                 
@@ -98,9 +144,10 @@ struct HomeView: View {
             .sheet(isPresented: $presentWorkout) {
                 ActiveWorkoutView()
             }
-            .sheet(isPresented: $presentCreatePlan) {
-                CreatePlanView()
+            .sheet(item: $planPendingEdit) { plan in
+                CreatePlanView(editingPlan: plan)
             }
+            
         }
     }
 }

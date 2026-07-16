@@ -10,7 +10,7 @@ import SwiftUI
 
 struct PlanExerciseDraft: Identifiable {
     let id = UUID()
-    var exerciseID = UUID()
+    var exerciseID: UUID = UUID()
     var name: String = ""
     var setCount: Int = 3
 }
@@ -18,10 +18,15 @@ struct PlanExerciseDraft: Identifiable {
 struct CreatePlanView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
-    @Query(sort: \SavedWorkout.name) private var savedPlans: [SavedWorkout]
+
+    let editingPlan: SavedWorkout?
 
     @State private var planName: String = ""
     @State private var exercises: [PlanExerciseDraft] = []
+
+    init(editingPlan: SavedWorkout? = nil) {
+        self.editingPlan = editingPlan
+    }
 
     var body: some View {
         NavigationStack {
@@ -45,17 +50,31 @@ struct CreatePlanView: View {
                     }
                 }
             }
-            .navigationTitle(planName.isEmpty ? "New Plan" : planName)
+            .navigationTitle(editingPlan == nil ? "New Plan" : "Edit Plan")
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
-                        savePlan()
-                    }
-                    .disabled(planName.isEmpty || exercises.isEmpty)
+                    Button("Save") { savePlan() }
+                        .disabled(planName.isEmpty || exercises.isEmpty)
                 }
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
                 }
+            }
+            .onAppear { loadExistingPlanIfNeeded() }
+        }
+    }
+
+    private func loadExistingPlanIfNeeded() {
+        guard let editingPlan, exercises.isEmpty else { return }
+        planName = editingPlan.name
+
+        if let template = try? PersistanceHelper.transformFromData(editingPlan.workoutData) {
+            exercises = template.exercises.map { exercise in
+                PlanExerciseDraft(
+                    exerciseID: exercise.exerciseID,
+                    name: exercise.exerciseName,
+                    setCount: max(exercise.sets.count, 1)
+                )
             }
         }
     }
@@ -72,11 +91,14 @@ struct CreatePlanView: View {
 
         do {
             let data = try PersistanceHelper.transformToData(template)
-            let saved = SavedWorkout(name: planName, workoutData: data)
-            
-            // Save into swift data
-            modelContext.insert(saved)
-            
+
+            if let editingPlan {
+                editingPlan.name = planName
+                editingPlan.workoutData = data
+            } else {
+                let saved = SavedWorkout(name: planName, workoutData: data)
+                modelContext.insert(saved)
+            }
             dismiss()
         } catch {
             print("Failed to save plan: \(error)")
