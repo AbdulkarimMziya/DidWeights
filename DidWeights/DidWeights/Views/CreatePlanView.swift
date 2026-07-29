@@ -50,7 +50,10 @@ struct CreatePlanView: View {
                     }
                 }
             }
-            .navigationTitle(editingPlan == nil ? "New Plan" : "Edit Plan")
+            .navigationTitle(editingPlan == nil ?
+                             planName.isEmpty ? "New Plan" : planName
+                             : "Edit Plan"
+            )
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") { savePlan() }
