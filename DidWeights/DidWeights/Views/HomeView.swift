@@ -80,10 +80,12 @@ struct HomeView: View {
                         // Workout Plan grids
                         LazyVGrid(columns: columns, spacing: 16) {
                             ForEach(savedPlans) { plan in
-                                WorkoutTemplateCard(plan: plan)
-                                    .onTapGesture {
-                                        selectedPlan = plan
-                                    }
+                                WorkoutTemplateCard(plan: plan) {
+                                    selectedPlan = plan
+                                }
+                                .onTapGesture {
+                                    planPendingEdit = plan
+                                }
                             }
                         }
                         .confirmationDialog(
@@ -98,10 +100,6 @@ struct HomeView: View {
                                 Button("Start Workout") {
                                     manager.startWorkout(from: plan)
                                     presentWorkout = true
-                                    selectedPlan = nil
-                                }
-                                Button("Edit Plan") {
-                                    planPendingEdit = plan
                                     selectedPlan = nil
                                 }
                                 Button("Delete Plan", role: .destructive) {
@@ -147,6 +145,9 @@ struct HomeView: View {
             .sheet(item: $planPendingEdit) { plan in
                 CreatePlanView(editingPlan: plan)
             }
+            .sheet(isPresented: $presentCreatePlan) {
+                CreatePlanView()
+            }
             
         }
     }
@@ -156,6 +157,7 @@ struct HomeView: View {
 
 struct WorkoutTemplateCard: View {
     let plan: SavedWorkout
+    var onOptions: () -> Void
 
     private var exerciseCount: Int {
         (try? PersistanceHelper.transformFromData(plan.workoutData))?.exercises.count ?? 0
@@ -191,6 +193,19 @@ struct WorkoutTemplateCard: View {
         .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(12)
         .shadow(color: .black.opacity(0.25), radius: 5, x: 0, y: 2)
+        .overlay(alignment: .topTrailing) {
+            Button(action: onOptions) {
+                Image(systemName: "ellipsis")
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundStyle(.secondary)
+                    .padding(8)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Plan options")
+            .accessibilityHint("Start, delete, or view options for \(plan.name)")
+            .padding(6)
+        }
     }
 }
 
