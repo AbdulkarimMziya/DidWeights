@@ -56,7 +56,7 @@ struct HistoryView: View {
             }
             .navigationTitle("History")
             .navigationDestination(for: Workout.self) { workout in
-                Text("Detail for \(workout.startDate.formatted())")
+                WorkoutDetailView(workout: workout)
             }
         }
     }
