@@ -43,8 +43,14 @@ struct HistoryView: View {
     
     var body: some View {
         NavigationStack{
-            List(pastWorkouts) { workout in
-                Text(workout.startDate.formatted())
+            List {
+                ForEach(monthSections) { section in
+                    Section(section.title) {
+                        ForEach(section.workouts) { workout in
+                            Text(workout.startDate.formatted(date: .abbreviated, time: .omitted))
+                        }
+                    }
+                }
             }
             .navigationTitle("History")
         }
