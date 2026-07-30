@@ -47,12 +47,17 @@ struct HistoryView: View {
                 ForEach(monthSections) { section in
                     Section(section.title) {
                         ForEach(section.workouts) { workout in
-                            Text(workout.startDate.formatted(date: .abbreviated, time: .omitted))
+                            NavigationLink(value: workout) {
+                                Text(workout.startDate.formatted(date: .abbreviated, time: .omitted))
+                            }
                         }
                     }
                 }
             }
             .navigationTitle("History")
+            .navigationDestination(for: Workout.self) { workout in
+                Text("Detail for \(workout.startDate.formatted())")
+            }
         }
     }
 }
