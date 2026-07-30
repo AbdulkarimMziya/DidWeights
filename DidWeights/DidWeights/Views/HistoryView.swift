@@ -8,8 +8,38 @@
 import SwiftData
 import SwiftUI
 
+struct MonthSection: Identifiable {
+    let id: String
+    let title: String
+    let workouts: [Workout]
+}
+
 struct HistoryView: View {
     @Query(sort: \Workout.startDate, order: .reverse) private var pastWorkouts: [Workout]
+    
+    private var monthSections: [MonthSection] {
+        var buckets: [String: [Workout]] = [:]        // empty dictionary
+        let calendar = Calendar.current
+
+        for workout in pastWorkouts {
+            let year = calendar.component(.year, from: workout.startDate)
+            let month = calendar.component(.month, from: workout.startDate)
+            let key = "\(year)-\(month)"                // "2026-7"
+
+            buckets[key, default: []].append(workout)   // add this workout to its bucket
+        }
+
+        // Now turn the dictionary into an array of MonthSection, sorted newest first
+        var sections: [MonthSection] = []
+        for (key, workouts) in buckets {
+            let sortedWorkouts = workouts.sorted { $0.startDate > $1.startDate }
+            let title = sortedWorkouts.first?.startDate.formatted(.dateTime.month(.wide).year()) ?? key
+            sections.append(MonthSection(id: key, title: title, workouts: sortedWorkouts))
+        }
+
+        return sections.sorted { $0.id > $1.id }
+    }
+    
     
     var body: some View {
         NavigationStack{
