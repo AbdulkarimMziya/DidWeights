@@ -42,13 +42,23 @@ struct HistoryView: View {
     
     
     var body: some View {
-        NavigationStack{
-            List {
-                ForEach(monthSections) { section in
-                    Section(section.title) {
-                        ForEach(section.workouts) { workout in
-                            NavigationLink(value: workout) {
-                                Text(workout.startDate.formatted(date: .abbreviated, time: .omitted))
+        NavigationStack {
+            Group {
+                if pastWorkouts.isEmpty {
+                    ContentUnavailableView(
+                        "No Workouts Yet",
+                        systemImage: "clock.arrow.circlepath",
+                        description: Text("Finish your first workout to see it here.")
+                    )
+                } else {
+                    List {
+                        ForEach(monthSections) { section in
+                            Section(section.title) {
+                                ForEach(section.workouts) { workout in
+                                    NavigationLink(value: workout) {
+                                        Text(workout.startDate.formatted(date: .abbreviated, time: .omitted))
+                                    }
+                                }
                             }
                         }
                     }

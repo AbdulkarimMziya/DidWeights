@@ -16,14 +16,16 @@ struct WorkoutDetailView: View {
     
     var body: some View {
         List {
-            if let logged {
+            if let logged, !logged.exercises.isEmpty {
                 ForEach(logged.exercises) { exercise in
                     Section(exercise.exerciseName) {
                         ForEach(exercise.sets) { set in
                             HStack {
                                 Text("\(set.reps ?? 0) reps")
                                 Spacer()
-                                Text("\(set.weight ?? 0, specifier: "%.1f") lb")
+                                if let weight = set.weight {
+                                    Text("\(weight, specifier: "%.1f") lb")
+                                }
                             }
                         }
                     }
