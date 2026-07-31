@@ -9,8 +9,7 @@ import Foundation
 
 struct LoggedWorkout: Codable, Identifiable {
     var id = UUID()
-    
+    var name: String = "Workout"
     var startDate: Date
-    
     var exercises: [LoggedExercise] = []
 }

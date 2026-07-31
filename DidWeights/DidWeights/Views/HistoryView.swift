@@ -56,7 +56,11 @@ struct HistoryView: View {
                             Section(section.title) {
                                 ForEach(section.workouts) { workout in
                                     NavigationLink(value: workout) {
-                                        Text(workout.startDate.formatted(date: .abbreviated, time: .omitted))
+                                        HStack{
+                                            Text(workout.name)
+                                            Spacer()
+                                            Text(workout.startDate.formatted(date: .abbreviated, time: .omitted))
+                                        }
                                     }
                                 }
                             }

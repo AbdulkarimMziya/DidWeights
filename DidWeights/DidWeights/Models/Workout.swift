@@ -12,14 +12,14 @@ import SwiftData
 class Workout: Identifiable, Hashable {
     @Attribute(.unique)
     var id = UUID()
-    
+    var name: String = "Workout"
     var startDate: Date
     var endDate: Date
     
     @Attribute(.externalStorage)
     var workoutData: Data
     
-    init(id: UUID = UUID(), startDate: Date, endDate: Date, workoutData: Data) {
+    init(id: UUID = UUID(), name: String = "Workout", startDate: Date, endDate: Date, workoutData: Data) {
         self.id = id
         self.startDate = startDate
         self.endDate = endDate

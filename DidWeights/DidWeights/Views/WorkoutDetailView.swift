@@ -35,7 +35,7 @@ struct WorkoutDetailView: View {
                     .foregroundStyle(.secondary)
             }
         }
-        .navigationTitle(workout.startDate.formatted(date: .abbreviated, time: .omitted))
+        .navigationTitle(workout.name)
     }
 }
 
