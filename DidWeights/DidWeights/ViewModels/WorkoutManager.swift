@@ -99,7 +99,7 @@ class WorkoutManager {
     }
     
     // End Workout
-    func finishWorkout() {
+    func finishWorkout(modelContext: ModelContext) {
         guard let activeWorkout else { return }
         
         do {

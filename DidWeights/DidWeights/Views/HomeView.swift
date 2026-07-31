@@ -39,7 +39,7 @@ struct HomeView: View {
                             manager.startWorkout()
                             presentWorkout = true
                         } label: {
-                            Text(manager.activeWorkout == nil ? "Start an Empty Workout" : "Resume Workout")
+                            Text(manager.activeWorkout == nil ? "Start a Workout" : "Resume Workout")
                                 .font(.system(size: 18, weight: .semibold))
                                 .foregroundStyle(.white)
                                 .padding(.vertical, 14)
