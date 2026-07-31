@@ -80,6 +80,7 @@ class WorkoutManager {
             // Fresh session identity, but keep the exercise/set structure from the plan
             let newWorkout = LoggedWorkout(
                 id: UUID(),
+                name: savedWorkout.name,
                 startDate: Date(),
                 exercises: template.exercises.map { exercise in
                     LoggedExercise(
@@ -98,7 +99,7 @@ class WorkoutManager {
     }
     
     // End Workout
-    func finishWorkout() {
+    func finishWorkout(modelContext: ModelContext) {
         guard let activeWorkout else { return }
         
         do {
@@ -106,6 +107,7 @@ class WorkoutManager {
             let data = try PersistanceHelper.transformToData(activeWorkout)
             
             let persistWorkout = Workout(
+                name: activeWorkout.name,
                 startDate: activeWorkout.startDate,
                 endDate: Date(),
                 workoutData: data

@@ -18,6 +18,7 @@ enum FinishWorkoutAlert: Identifiable {
 struct ActiveWorkoutView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(WorkoutManager.self) private var manager
+    @Environment(\.modelContext) private var modelContext
 
     @State private var activeAlert: FinishWorkoutAlert?
     
@@ -82,7 +83,7 @@ struct ActiveWorkoutView: View {
                         title: Text("Finish Workout?"),
                         message: Text("There are sets in this workout that haven't been marked as completed."),
                         primaryButton: .default(Text("Finish Anyway"), action: {
-                            manager.finishWorkout()
+                            manager.finishWorkout(modelContext: modelContext)
                             dismiss()
                         }),
                         secondaryButton: .cancel(Text("Resume"))
@@ -94,7 +95,7 @@ struct ActiveWorkoutView: View {
                     return Alert(
                         title: Text("Finish Workout?"),
                         primaryButton: .default(Text("Finish"), action: {
-                            manager.finishWorkout()
+                            manager.finishWorkout(modelContext: modelContext)
                             dismiss()
                         }),
                         secondaryButton: .cancel(Text("Cancel"))
