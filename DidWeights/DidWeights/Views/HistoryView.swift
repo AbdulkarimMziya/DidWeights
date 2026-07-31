@@ -58,6 +58,7 @@ struct HistoryView: View {
                                     NavigationLink(value: workout) {
                                         HStack{
                                             Text(workout.name)
+                                                .fontWeight(.semibold)
                                             Spacer()
                                             Text(workout.startDate.formatted(date: .abbreviated, time: .omitted))
                                         }
