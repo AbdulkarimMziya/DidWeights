@@ -61,6 +61,7 @@ class WorkoutManager {
      * func startWorkout()
      * func finishWorkout()
      * func cancelWorkout()
+     * func sanitizeForSaving()
      **/
     
     // Start Workout
@@ -102,19 +103,21 @@ class WorkoutManager {
     func finishWorkout(modelContext: ModelContext) {
         guard let activeWorkout else { return }
         
+        let cleaned = sanitizedForSaving(activeWorkout)
+
         do {
             
-            let data = try PersistanceHelper.transformToData(activeWorkout)
+            let data = try PersistanceHelper.transformToData(cleaned)
             
             let persistWorkout = Workout(
-                name: activeWorkout.name,
-                startDate: activeWorkout.startDate,
+                name: cleaned.name,
+                startDate: cleaned.startDate,
                 endDate: Date(),
                 workoutData: data
             )
             
             // Save in model Container
-            // modelContext.insert(persistWorkout)
+            modelContext.insert(persistWorkout)
             
             // Clear active Workout
             self.activeWorkout = nil
@@ -122,6 +125,29 @@ class WorkoutManager {
         } catch {
             print("Failed to save session record: \(error)")
         }
+    }
+    
+    // MARK: Sanitization
+    
+    /// Strips genuinely blank sets (never touched: no reps, no weight, not completed)
+    /// and any exercise left with zero sets after that cleanup, before persisting.
+    private func sanitizedForSaving(_ workout: LoggedWorkout) -> LoggedWorkout {
+        var cleaned = workout
+
+        cleaned.exercises = workout.exercises.compactMap { exercise in
+            let keptSets = exercise.sets.filter { set in
+                guard let reps = set.reps, reps > 0 else { return false }
+                return true
+            }
+
+            guard !keptSets.isEmpty else { return nil }
+
+            var cleanedExercise = exercise
+            cleanedExercise.sets = keptSets
+            return cleanedExercise
+        }
+
+        return cleaned
     }
     
     // Cancel Workout
@@ -195,11 +221,15 @@ class WorkoutManager {
             let setIndex = setIndex(exerciseIndex: exIndex, setID: setID)
         else { return }
         
-//        let reps = activeWorkout?.exercises[exIndex].sets[setIndex].reps ?? 0
-//        guard reps >= 1 else {
-//            print("Cannot complete a set with 0 reps.")
-//            return
-//        }
+        let set = activeWorkout!.exercises[exIndex].sets[setIndex]
+        
+        // Allow un-completing freely, but require valid reps to mark complete
+        if !set.isCompleted {
+            guard let reps = set.reps, reps > 0 else {
+                print("Cannot complete a set with no reps entered.")
+                return
+            }
+        }
 
         self.activeWorkout?.exercises[exIndex].sets[setIndex].isCompleted.toggle()
     }

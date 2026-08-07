@@ -21,6 +21,7 @@ class Workout: Identifiable, Hashable {
     
     init(id: UUID = UUID(), name: String = "Workout", startDate: Date, endDate: Date, workoutData: Data) {
         self.id = id
+        self.name = name
         self.startDate = startDate
         self.endDate = endDate
         self.workoutData = workoutData

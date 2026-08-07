@@ -21,10 +21,12 @@ struct WorkoutDetailView: View {
                     Section(exercise.exerciseName) {
                         ForEach(exercise.sets) { set in
                             HStack {
-                                Text("\(set.reps ?? 0) reps")
+                                if let reps = set.reps {
+                                    Text("\(reps) reps")
+                                }
                                 Spacer()
                                 if let weight = set.weight {
-                                    Text("\(weight, specifier: "%.1f") lb")
+                                    Text("\(weight, specifier: "%.1f") lb(s)")
                                 }
                             }
                         }
