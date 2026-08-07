@@ -13,7 +13,7 @@ import SwiftUI
 struct DidWeightsApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            SplashScreenView()
         }
         .modelContainer(for: [Exercise.self, SavedWorkout.self, Workout.self])
     }

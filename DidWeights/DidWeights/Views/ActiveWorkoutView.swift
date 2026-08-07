@@ -21,6 +21,7 @@ struct ActiveWorkoutView: View {
     @Environment(\.modelContext) private var modelContext
 
     @State private var activeAlert: FinishWorkoutAlert?
+    @FocusState private var focusedField: UUID?
     
     var body: some View {
         NavigationStack {
@@ -32,10 +33,11 @@ struct ActiveWorkoutView: View {
                             
                             WorkoutHeaderView(workout: workout)
                             
-                            ExerciseListView(exercises: workout.exercises)
+                            ExerciseListView(exercises: workout.exercises, focusedField: $focusedField)
                             
                             ActionButtonView()
                         }
+                        .padding(.horizontal)
                         
                         .toolbar {
                             ToolbarItem(placement: .confirmationAction) {
@@ -57,9 +59,16 @@ struct ActiveWorkoutView: View {
                 }
             }
             .scrollBounceBehavior(.always)
-        
             .navigationTitle("Workout Session")
-            .padding(.horizontal)
+            .toolbar {
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+
+                    Button("Done") {
+                        focusedField = nil
+                    }
+                }
+            }
             .alert(item: $activeAlert) { alert in
 
                 switch alert {
@@ -128,11 +137,12 @@ struct ActiveWorkoutView: View {
 
 struct ExerciseListView: View {
     var exercises: [LoggedExercise]
+    @FocusState.Binding var focusedField: UUID?
 
     var body: some View {
         VStack(spacing: 20) {
             ForEach(exercises) { exercise in
-                ExerciseRowView(exercise: exercise)
+                ExerciseRowView(exercise: exercise, focusedField: $focusedField)
             }
         }
     }
@@ -141,6 +151,8 @@ struct ExerciseListView: View {
 
 struct ExerciseRowView: View {
     let exercise: LoggedExercise
+    
+    @FocusState.Binding var focusedField: UUID?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -155,7 +167,8 @@ struct ExerciseRowView: View {
                 WorkoutSetRowView(
                     index: index,
                     exerciseID: exercise.id,
-                    workSet: set
+                    workSet: set,
+                    focusedField: $focusedField,
                 )
             }
 
@@ -305,7 +318,7 @@ struct WorkoutSetRowView: View {
     let exerciseID: UUID
     let workSet: WorkoutSet
     
-    @FocusState private var isEditing: Bool
+    @FocusState.Binding var focusedField: UUID?
     
     private var weightBinding: Binding<Double?> {
         Binding(
@@ -359,7 +372,7 @@ struct WorkoutSetRowView: View {
             
             TextField("0", value: weightBinding, format: .number)
                 .keyboardType(.decimalPad)
-                .focused($isEditing)
+                .focused($focusedField, equals: workSet.id)
                 .multilineTextAlignment(.center)
                 .frame(width: 55)
                 .padding(.vertical, 4)
@@ -373,7 +386,7 @@ struct WorkoutSetRowView: View {
             
             TextField("0", value: repsBinding, format: .number)
                 .keyboardType(.numberPad)
-                .focused($isEditing)
+                .focused($focusedField, equals: workSet.id)
                 .multilineTextAlignment(.center)
                 .frame(width: 55)
                 .padding(.vertical, 4)
@@ -397,15 +410,6 @@ struct WorkoutSetRowView: View {
         }
         .padding(.vertical, 4)
         .background(workSet.isCompleted ? .green.opacity(0.2) : .clear)
-        .toolbar {
-            ToolbarItemGroup(placement: .keyboard) {
-                Spacer()
-
-                Button("Done") {
-                    isEditing = false
-                }
-            }
-        }
       
     }
 }
@@ -426,8 +430,7 @@ struct WorkoutHeaderView: View {
                 Image(systemName: "clock")
                     .frame(width: 20)
                     .foregroundColor(.green)
-                Text("00:00")
-                    .monospacedDigit()
+                WorkoutTimerView(startDate: workout.startDate)
             }
         }
         .font(.subheadline)
