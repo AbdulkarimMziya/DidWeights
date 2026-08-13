@@ -14,13 +14,19 @@ struct SplashScreenView: View {
         if isActive {
             ContentView()
         } else {
-            VStack {
-                Text("DidWeights")
+            VStack(spacing: 16) {
+                Image("AppIconSplash")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 140, height: 140)
+                    .clipShape(RoundedRectangle(cornerRadius: 28))
+                
+                Text("Did Weights")  
                     .font(.system(size: 40, weight: .bold, design: .rounded))
                     .foregroundStyle(.white)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Color.blue)
+            .background(.black)
             .onAppear {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
                     withAnimation {
