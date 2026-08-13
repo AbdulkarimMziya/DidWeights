@@ -179,9 +179,9 @@ struct WorkoutTemplateCard: View {
 
                 Group {
                     if let lastActive = plan.lastActive {
-                        Text("Active: \(lastActive, style: .date)")
+                        Text("Done: \(lastActive.formatted(.relative(presentation: .named)))")
                     } else {
-                        Text("Never active")
+                        Text("Never completed")
                     }
                 }
                 .font(.caption)

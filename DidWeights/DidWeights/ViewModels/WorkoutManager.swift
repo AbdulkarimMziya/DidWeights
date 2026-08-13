@@ -91,6 +91,9 @@ class WorkoutManager {
                     )
                 }
             )
+            
+            // Mark this plan as active today
+            savedWorkout.lastActive = Date()
 
             self.activeWorkout = newWorkout
             self.isWorkoutActive = true
