@@ -7,6 +7,12 @@
 
 import SwiftUI
 
+private enum ActivePalette {
+    static let primaryButtonBackground = Color("PrimaryBtnBG")
+    static let primaryButtonText = Color("PrimaryBtnText")
+    static let pillBackground = Color("PillBackground")
+}
+
 enum FinishWorkoutAlert: Identifiable {
     case cancelEmptyWorkout
     case unfinishedSets
@@ -217,9 +223,9 @@ struct ExerciseHeaderView: View {
             } label: {
                 Image(systemName: "ellipsis")
                     .font(.system(size: 28))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(ActivePalette.primaryButtonText)
                     .frame(width: 40, height: 24)
-                    .background(.secondary)
+                    .background(ActivePalette.pillBackground)
                     .clipShape(.capsule)
             }
         }
@@ -261,11 +267,11 @@ struct ExerciseActionsView: View {
                 Label("Add Set", systemImage: "plus")
                     .font(.subheadline)
                     .fontWeight(.medium)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(ActivePalette.primaryButtonText)
                 Spacer()
             }
             .padding(.vertical, 8)
-            .background(Color.blue)
+            .background(ActivePalette.primaryButtonBackground)
             .clipShape(RoundedRectangle(cornerRadius: 8))
         }
         
@@ -455,10 +461,10 @@ struct ActionButtonView: View {
             } label: {
                 Text("Add Exercise")
                     .font(.system(size: 20, weight: .bold))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(ActivePalette.primaryButtonText)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 12)
-                    .background(Color.blue)
+                    .background(ActivePalette.primaryButtonBackground)
                     .clipShape(.buttonBorder)
             }
             
@@ -470,7 +476,6 @@ struct ActionButtonView: View {
                     .font(.system(size: 20, weight: .bold))
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 12)
-                    .background(Color.red.opacity(0.15))
                     .clipShape(.buttonBorder)
             }
             .alert("Cancel Workout?", isPresented: $showCancelAlert) {
@@ -505,4 +510,3 @@ struct ActionButtonView: View {
         .environment(mockManager) // 4. Inject it here
 }
                 
-

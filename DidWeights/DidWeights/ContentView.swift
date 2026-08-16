@@ -22,7 +22,7 @@ struct ContentView: View {
             }
                 
         }
-        
+        .tint(Color("PrimaryBtnBG"))
     }
 }
 
