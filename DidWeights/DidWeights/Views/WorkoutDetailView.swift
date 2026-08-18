@@ -74,11 +74,7 @@ struct WorkoutDetailView: View {
     let logged = LoggedWorkout(startDate: Date(), exercises: exercises)
     let data = (try? PersistanceHelper.transformToData(logged)) ?? Data()
 
-    let workout = Workout(
-        startDate: Date(),
-        endDate: Date().addingTimeInterval(50 * 60),
-        workoutData: data
-    )
+    let workout = Workout(workoutData: data)
 
     return NavigationStack {
         WorkoutDetailView(workout: workout)

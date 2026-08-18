@@ -5,6 +5,7 @@
 //  Created by Abdulkarim Mziya on 2026-06-14.
 //
 
+import SwiftData
 import SwiftUI
 
 private enum ActivePalette {
@@ -23,11 +24,40 @@ enum FinishWorkoutAlert: Identifiable {
 
 struct ActiveWorkoutView: View {
     @Environment(\.dismiss) private var dismiss
+    @Query(
+        filter: #Predicate<Workout> { workout in
+            workout.endDate == nil
+        },
+        
+        sort: \Workout.startDate,
+        order: .reverse,
+    )
+    var workouts: [Workout]
+    
+    var body: some View {
+        if let activeWorkout = workouts.first {
+            ActiveWorkoutContent(workout: activeWorkout).onAppear() {
+                if workouts.first == nil {
+                    dismiss()
+                }
+            }
+        }
+    }
+}
+
+struct ActiveWorkoutContent: View {
+    @Environment(\.dismiss) private var dismiss
     @Environment(WorkoutManager.self) private var manager
     @Environment(\.modelContext) private var modelContext
 
     @State private var activeAlert: FinishWorkoutAlert?
     @FocusState private var focusedField: UUID?
+    
+    private var workout: Workout
+    
+    init(workout: Workout) {
+        self.workout = workout
+    }
     
     var body: some View {
         NavigationStack {
@@ -111,6 +141,8 @@ struct ActiveWorkoutView: View {
                         title: Text("Finish Workout?"),
                         primaryButton: .default(Text("Finish"), action: {
                             manager.finishWorkout(modelContext: modelContext)
+                            workout.endDate = .now
+                            modelContext.insert(workout)
                             dismiss()
                         }),
                         secondaryButton: .cancel(Text("Cancel"))

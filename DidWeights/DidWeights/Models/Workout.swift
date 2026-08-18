@@ -14,16 +14,16 @@ class Workout: Identifiable, Hashable {
     var id = UUID()
     var name: String = "Workout"
     var startDate: Date
-    var endDate: Date
+    var endDate: Date?
     
     @Attribute(.externalStorage)
     var workoutData: Data
     
-    init(id: UUID = UUID(), name: String = "Workout", startDate: Date, endDate: Date, workoutData: Data) {
-        self.id = id
+    init(name: String = "Workout", workoutData: Data) {
+        self.id = UUID()
         self.name = name
-        self.startDate = startDate
-        self.endDate = endDate
+        self.startDate = .now
+        self.endDate = nil
         self.workoutData = workoutData
     }
 }
