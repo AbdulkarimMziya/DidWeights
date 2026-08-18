@@ -15,7 +15,14 @@ struct MonthSection: Identifiable {
 }
 
 struct HistoryView: View {
-    @Query(sort: \Workout.startDate, order: .reverse) private var pastWorkouts: [Workout]
+    @Query(
+        filter: #Predicate<Workout> { workout in
+            workout.endDate != nil
+        },
+        sort: \Workout.startDate,
+        order: .reverse,
+    )
+    private var pastWorkouts: [Workout]
     
     private var monthSections: [MonthSection] {
         var buckets: [String: [Workout]] = [:]        // empty dictionary
@@ -115,8 +122,6 @@ struct HistoryView: View {
 
     for date in sampleDates {
         let workout = Workout(
-            startDate: date,
-            endDate: date.addingTimeInterval(45 * 60),
             workoutData: sampleWorkoutData(exerciseNames: ["Bench Press", "Squat"])
         )
         container.mainContext.insert(workout)

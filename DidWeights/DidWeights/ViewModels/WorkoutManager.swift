@@ -114,8 +114,6 @@ class WorkoutManager {
             
             let persistWorkout = Workout(
                 name: cleaned.name,
-                startDate: cleaned.startDate,
-                endDate: Date(),
                 workoutData: data
             )
             
