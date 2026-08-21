@@ -9,7 +9,7 @@ import Foundation
 import SwiftData
 
 @Model
-class Exercise: Identifiable, Hashable {
+class LegacyExercise: Identifiable, Hashable {
     
     @Attribute(.unique)
     var id = UUID()

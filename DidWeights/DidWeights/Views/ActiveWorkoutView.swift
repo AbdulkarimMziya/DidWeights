@@ -25,14 +25,14 @@ enum FinishWorkoutAlert: Identifiable {
 struct ActiveWorkoutView: View {
     @Environment(\.dismiss) private var dismiss
     @Query(
-        filter: #Predicate<Workout> { workout in
+        filter: #Predicate<LegacyWorkout> { workout in
             workout.endDate == nil
         },
         
-        sort: \Workout.startDate,
+        sort: \LegacyWorkout.startDate,
         order: .reverse,
     )
-    var workouts: [Workout]
+    var workouts: [LegacyWorkout]
     
     var body: some View {
         if let activeWorkout = workouts.first {
@@ -53,9 +53,9 @@ struct ActiveWorkoutContent: View {
     @State private var activeAlert: FinishWorkoutAlert?
     @FocusState private var focusedField: UUID?
     
-    private var workout: Workout
+    private var workout: LegacyWorkout
     
-    init(workout: Workout) {
+    init(workout: LegacyWorkout) {
         self.workout = workout
     }
     

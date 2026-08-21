@@ -72,7 +72,7 @@ class WorkoutManager {
         self.activeWorkout = LoggedWorkout(startDate: Date())
     }
     
-    func startWorkout(from savedWorkout: SavedWorkout) {
+    func startWorkout(from savedWorkout: LegacySavedWorkout) {
         guard activeWorkout == nil else { return }
 
         do {
@@ -112,7 +112,7 @@ class WorkoutManager {
             
             let data = try PersistanceHelper.transformToData(cleaned)
             
-            let persistWorkout = Workout(
+            let persistWorkout = LegacyWorkout(
                 name: cleaned.name,
                 workoutData: data
             )

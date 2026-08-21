@@ -1,5 +1,5 @@
 //
-//  SavedWorkout.swift
+//  Workout.swift
 //  DidWeights
 //
 //  Created by Abdulkarim Mziya on 2026-06-06.
@@ -9,20 +9,21 @@ import Foundation
 import SwiftData
 
 @Model
-class SavedWorkout: Identifiable, Hashable {
+class LegacyWorkout: Identifiable, Hashable {
     @Attribute(.unique)
     var id = UUID()
-    
-    var name: String
-    var lastActive: Date?
+    var name: String = "Workout"
+    var startDate: Date
+    var endDate: Date?
     
     @Attribute(.externalStorage)
     var workoutData: Data
     
-    init(id: UUID = UUID(), name: String, lastActive: Date? = nil, workoutData: Data) {
-        self.id = id
+    init(name: String = "Workout", workoutData: Data) {
+        self.id = UUID()
         self.name = name
-        self.lastActive = lastActive
+        self.startDate = .now
+        self.endDate = nil
         self.workoutData = workoutData
     }
 }

@@ -19,12 +19,12 @@ struct CreatePlanView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
 
-    let editingPlan: SavedWorkout?
+    let editingPlan: LegacySavedWorkout?
 
     @State private var planName: String = ""
     @State private var exercises: [PlanExerciseDraft] = []
 
-    init(editingPlan: SavedWorkout? = nil) {
+    init(editingPlan: LegacySavedWorkout? = nil) {
         self.editingPlan = editingPlan
     }
 
@@ -99,7 +99,7 @@ struct CreatePlanView: View {
                 editingPlan.name = planName
                 editingPlan.workoutData = data
             } else {
-                let saved = SavedWorkout(name: planName, workoutData: data)
+                let saved = LegacySavedWorkout(name: planName, workoutData: data)
                 modelContext.insert(saved)
             }
             dismiss()
