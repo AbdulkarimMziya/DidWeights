@@ -21,13 +21,13 @@ private enum HomePalette {
 struct HomeView: View {
     @Environment(WorkoutManager.self) private var manager
     @Environment(\.modelContext) private var modelContext
-    @Query(sort: \SavedWorkout.name) private var savedPlans: [SavedWorkout]
+    @Query(sort: \LegacySavedWorkout.name) private var savedPlans: [LegacySavedWorkout]
     
     @State private var presentWorkout = false
     @State private var presentCreatePlan = false
-    @State private var selectedPlan: SavedWorkout?
-    @State private var planPendingEdit: SavedWorkout?
-    @State private var planPendingDelete: SavedWorkout?
+    @State private var selectedPlan: LegacySavedWorkout?
+    @State private var planPendingEdit: LegacySavedWorkout?
+    @State private var planPendingDelete: LegacySavedWorkout?
     
     let columns = [
         GridItem(.flexible(), spacing: 16),
@@ -166,7 +166,7 @@ struct HomeView: View {
 
 
 struct WorkoutTemplateCard: View {
-    let plan: SavedWorkout
+    let plan: LegacySavedWorkout
     var onOptions: () -> Void
 
     private var exerciseCount: Int {

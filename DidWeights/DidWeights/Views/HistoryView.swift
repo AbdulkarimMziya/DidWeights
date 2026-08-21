@@ -11,21 +11,21 @@ import SwiftUI
 struct MonthSection: Identifiable {
     let id: String
     let title: String
-    let workouts: [Workout]
+    let workouts: [LegacyWorkout]
 }
 
 struct HistoryView: View {
     @Query(
-        filter: #Predicate<Workout> { workout in
+        filter: #Predicate<LegacyWorkout> { workout in
             workout.endDate != nil
         },
-        sort: \Workout.startDate,
+        sort: \LegacyWorkout.startDate,
         order: .reverse,
     )
-    private var pastWorkouts: [Workout]
+    private var pastWorkouts: [LegacyWorkout]
     
     private var monthSections: [MonthSection] {
-        var buckets: [String: [Workout]] = [:]        // empty dictionary
+        var buckets: [String: [LegacyWorkout]] = [:]        // empty dictionary
         let calendar = Calendar.current
 
         for workout in pastWorkouts {
@@ -77,7 +77,7 @@ struct HistoryView: View {
                 }
             }
             .navigationTitle("History")
-            .navigationDestination(for: Workout.self) { workout in
+            .navigationDestination(for: LegacyWorkout.self) { workout in
                 WorkoutDetailView(workout: workout)
             }
         }
@@ -88,7 +88,7 @@ struct HistoryView: View {
     // In-memory container so preview data never touches your real database
     let config = ModelConfiguration(isStoredInMemoryOnly: true)
     let container = try! ModelContainer(
-        for: Workout.self, SavedWorkout.self, Exercise.self,
+        for: LegacyWorkout.self, LegacySavedWorkout.self, LegacyExercise.self,
         configurations: config
     )
 
@@ -121,7 +121,7 @@ struct HistoryView: View {
     ]
 
     for date in sampleDates {
-        let workout = Workout(
+        let workout = LegacyWorkout(
             workoutData: sampleWorkoutData(exerciseNames: ["Bench Press", "Squat"])
         )
         container.mainContext.insert(workout)

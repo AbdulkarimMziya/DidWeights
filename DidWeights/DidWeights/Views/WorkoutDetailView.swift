@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct WorkoutDetailView: View {
-    let workout: Workout
+    let workout: LegacyWorkout
     
     private var logged: LoggedWorkout? {
         try? PersistanceHelper.transformFromData(workout.workoutData)
@@ -74,7 +74,7 @@ struct WorkoutDetailView: View {
     let logged = LoggedWorkout(startDate: Date(), exercises: exercises)
     let data = (try? PersistanceHelper.transformToData(logged)) ?? Data()
 
-    let workout = Workout(workoutData: data)
+    let workout = LegacyWorkout(workoutData: data)
 
     return NavigationStack {
         WorkoutDetailView(workout: workout)
