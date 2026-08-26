@@ -10,7 +10,7 @@ import SwiftData
 
 @MainActor
 struct WorkoutRepository {
-    private let context: ModelContext
+    let context: ModelContext
     
     init(context: ModelContext) {
         self.context = context
