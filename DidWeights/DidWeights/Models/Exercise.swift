@@ -9,7 +9,7 @@ import Foundation
 import SwiftData
 
 @Model
-final class Exercise {
+final class Exercise: Hashable {
     var id: UUID
     var name: String
     var muscleGroup: String?
