@@ -18,8 +18,11 @@ struct WorkoutRepository {
 
     func activeWorkout() throws -> Workout? {
         var descriptor = FetchDescriptor<Workout>(
-            predicate: #Predicate { $0.endDate == nil }
+            predicate: #Predicate<Workout> { workout in
+                workout.endDate.flatMap { _ in true } == nil
+            }
         )
+
         descriptor.fetchLimit = 2
         
         
@@ -33,10 +36,8 @@ struct WorkoutRepository {
         case 2...:
             throw WorkoutRepositoryError.multipleActiveWorkouts
         default:
-            break
+            return nil
         }
-        
-        return nil
     }
     
     @discardableResult
@@ -96,23 +97,34 @@ struct WorkoutRepository {
         
         workout.endDate = date
         
-        // no reps set, no weight set, not completed
-        let untouchedSets = workout.sets.filter {
-            $0.reps == nil && $0.weight == nil && $0.isCompleted == false
+        // 1. Capture the initial ordered set configuration exactly once
+        let originalOrderedSets = workout.orderedSets
+        
+        // 2. Identify the untouched sets using the baseline criteria rules
+        let untouchedSets = originalOrderedSets.filter {
+            $0.reps == nil && $0.weight == nil && !$0.isCompleted
         }
         
+        // 3. Command the context engine to delete the untouched elements
         for set in untouchedSets {
             context.delete(set)
         }
         
-        for (index, remainigSet) in workout.orderedSets.enumerated() {
-            remainigSet.order = index
+        // 4. Manually construct the survivor tracking list by object reference exclusion
+        let survivors = originalOrderedSets.filter { set in
+            !untouchedSets.contains { $0.id == set.id }
+        }
+        
+        // 5. Enumerate across the survivors list to re-index sequence orders densely
+        for (index, remainingSet) in survivors.enumerated() {
+            remainingSet.order = index
         }
         
         workout.preset?.lastActive = date
         
         try context.save()
     }
+
     
     func cancel(_ workout: Workout) throws {
         context.delete(workout)

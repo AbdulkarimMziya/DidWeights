@@ -31,16 +31,29 @@ extension WorkoutRepository {
     }
     
     func removeExercise(_ exercise: Exercise, from workout: Workout) throws {
-        let removedExerciseSets = workout.sets.filter { $0.exercise == exercise }
+        // 1. Capture the initial state before any mutations
+        let originalOrderedSets = workout.orderedSets
         
+        // 2. Explicitly isolate the items designated for removal
+        let removedExerciseSets = originalOrderedSets.filter { $0.exercise == exercise }
+        let removedIDs = Set(removedExerciseSets.map { $0.id })
+        
+        // 3. Mark the records for deletion in the context
         for removedSet in removedExerciseSets {
             context.delete(removedSet)
         }
         
-        for (index, remainingExerciseSet) in workout.orderedSets.enumerated() {
-            remainingExerciseSet.order = index
+        // 4. Manually construct the survivors list from our immutable snapshot
+        let remainingSets = originalOrderedSets.filter { !removedIDs.contains($0.id) }
+        
+        // 5. Enumerate and densely re-index the survivors securely
+        for (index, remainingSet) in remainingSets.enumerated() {
+            remainingSet.order = index
         }
+        
+        try context.save()
     }
+
     
     @discardableResult
     func addSet(to workout: Workout, exercise: Exercise) throws -> ExerciseSet {
@@ -55,11 +68,21 @@ extension WorkoutRepository {
     func removeSet(_ set: ExerciseSet) throws {
         guard let workout = set.workout else { return }
         
+        // 1. Snapshot the full ordered collection before execution
+        let originalOrderedSets = workout.orderedSets
+        
+        // 2. Execute the deletion on the target record
         context.delete(set)
             
-        for (newIndex, remainingSet) in workout.orderedSets.enumerated() {
+        // 3. Build the survivors list locally, explicitly skipping the deleted set's ID
+        let survivors = originalOrderedSets.filter { $0.id != set.id }
+        
+        // 4. Enumerate across our local array to index the sequence densely (0, 1, 2...)
+        for (newIndex, remainingSet) in survivors.enumerated() {
             remainingSet.order = newIndex
         }
+        
+        try context.save()
     }
     
     func removeLastSet(of exercise: Exercise, in workout: Workout) throws {
@@ -100,3 +123,5 @@ extension WorkoutRepository {
     }
 
 }
+
+
