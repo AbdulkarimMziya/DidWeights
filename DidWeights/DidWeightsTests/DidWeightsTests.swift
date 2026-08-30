@@ -477,6 +477,64 @@ import Testing
         #expect(workoutBSets.allSatisfy { $0.exercise?.id == sharedExercise.id })
     }
     
-    
+    // MARK: Test for Derived Accessors **/
+    @Test func exerciseGroupsOrdersGroupsByFirstAppearance() throws {
+        // 1. Arrange: Start an empty workout and create two placeholder exercises
+        let workout = try sut.startEmptyWorkout(named: "Pull Day")
+        let exerciseA = Exercise(name: "Pull Ups")
+        let exerciseB = Exercise(name: "Rows")
+        
+        context.insert(exerciseA)
+        context.insert(exerciseB)
+        
+        // 2. Arrange: Intentionally insert Exercise B's set into the context FIRST in real time
+        let setB = ExerciseSet(order: 1, workout: workout, exercise: exerciseB)
+        context.insert(setB)
+        
+        // 3. Arrange: Insert Exercise A's set SECOND, but assign it a LOWER sequence order (0)
+        let setA = ExerciseSet(order: 0, workout: workout, exercise: exerciseA)
+        context.insert(setA)
+        
+        // 4. Act & Assert: Read the exerciseGroups computation property
+        let groups = workout.exerciseGroups
+        #expect(groups.count == 2)
+        
+        // 5. Assert: Verify the sort respects sequence appearance order, not database instantiation sequence
+        #expect(groups[0].exercise.id == exerciseA.id) // Order 0 appears first
+        #expect(groups[1].exercise.id == exerciseB.id) // Order 1 appears second
+    }
+
+    @Test func orderedSetsRespectsOrderEvenWhenRelationshipIsShuffled() throws {
+        // 1. Arrange: Start an empty workout session and insert a placeholder exercise
+        let workout = try sut.startEmptyWorkout(named: "Leg Day")
+        let legPress = Exercise(name: "Leg Press")
+        context.insert(legPress)
+        
+        // 2. Arrange: Manually construct and insert sets out of numeric order (2, then 0, then 1)
+        let setTwo = ExerciseSet(order: 2, workout: workout, exercise: legPress)
+        context.insert(setTwo)
+        
+        let setZero = ExerciseSet(order: 0, workout: workout, exercise: legPress)
+        context.insert(setZero)
+        
+        let setOne = ExerciseSet(order: 1, workout: workout, exercise: legPress)
+        context.insert(setOne)
+        
+        // 3. Act: Read the orderedSets collection property from the workout
+        let finalOrderedSets = workout.orderedSets
+        
+        // 4. Assert: Verify exactly 3 sets exist
+        #expect(finalOrderedSets.count == 3)
+        
+        // 5. Assert: Verify the returned array is strictly sorted by the numeric .order property
+        #expect(finalOrderedSets[0].id == setZero.id)
+        #expect(finalOrderedSets[0].order == 0)
+        
+        #expect(finalOrderedSets[1].id == setOne.id)
+        #expect(finalOrderedSets[1].order == 1)
+        
+        #expect(finalOrderedSets[2].id == setTwo.id)
+        #expect(finalOrderedSets[2].order == 2)
+    }
 
 }
