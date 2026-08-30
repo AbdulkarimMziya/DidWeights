@@ -6,11 +6,27 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXContainerItemProxy section */
+		4D3FBB7F3040BD8B00B9C8E8 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4DA1E7062FD49FA0000C4169 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 4DA1E70D2FD49FA0000C4169;
+			remoteInfo = DidWeights;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
+		4D3FBB7B3040BD8B00B9C8E8 /* DidWeightsTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DidWeightsTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		4DA1E70E2FD49FA0000C4169 /* DidWeights.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DidWeights.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		4D3FBB7C3040BD8B00B9C8E8 /* DidWeightsTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = DidWeightsTests;
+			sourceTree = "<group>";
+		};
 		4DA1E7102FD49FA0000C4169 /* DidWeights */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = DidWeights;
@@ -19,6 +35,13 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		4D3FBB783040BD8B00B9C8E8 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		4DA1E70B2FD49FA0000C4169 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -33,6 +56,7 @@
 			isa = PBXGroup;
 			children = (
 				4DA1E7102FD49FA0000C4169 /* DidWeights */,
+				4D3FBB7C3040BD8B00B9C8E8 /* DidWeightsTests */,
 				4DA1E70F2FD49FA0000C4169 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -41,6 +65,7 @@
 			isa = PBXGroup;
 			children = (
 				4DA1E70E2FD49FA0000C4169 /* DidWeights.app */,
+				4D3FBB7B3040BD8B00B9C8E8 /* DidWeightsTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -48,6 +73,29 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		4D3FBB7A3040BD8B00B9C8E8 /* DidWeightsTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4D3FBB813040BD8B00B9C8E8 /* Build configuration list for PBXNativeTarget "DidWeightsTests" */;
+			buildPhases = (
+				4D3FBB773040BD8B00B9C8E8 /* Sources */,
+				4D3FBB783040BD8B00B9C8E8 /* Frameworks */,
+				4D3FBB793040BD8B00B9C8E8 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				4D3FBB803040BD8B00B9C8E8 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				4D3FBB7C3040BD8B00B9C8E8 /* DidWeightsTests */,
+			);
+			name = DidWeightsTests;
+			packageProductDependencies = (
+			);
+			productName = DidWeightsTests;
+			productReference = 4D3FBB7B3040BD8B00B9C8E8 /* DidWeightsTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		4DA1E70D2FD49FA0000C4169 /* DidWeights */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 4DA1E7192FD49FA2000C4169 /* Build configuration list for PBXNativeTarget "DidWeights" */;
@@ -80,6 +128,10 @@
 				LastSwiftUpdateCheck = 2620;
 				LastUpgradeCheck = 2620;
 				TargetAttributes = {
+					4D3FBB7A3040BD8B00B9C8E8 = {
+						CreatedOnToolsVersion = 26.2;
+						TestTargetID = 4DA1E70D2FD49FA0000C4169;
+					};
 					4DA1E70D2FD49FA0000C4169 = {
 						CreatedOnToolsVersion = 26.2;
 					};
@@ -100,11 +152,19 @@
 			projectRoot = "";
 			targets = (
 				4DA1E70D2FD49FA0000C4169 /* DidWeights */,
+				4D3FBB7A3040BD8B00B9C8E8 /* DidWeightsTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		4D3FBB793040BD8B00B9C8E8 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		4DA1E70C2FD49FA0000C4169 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -115,6 +175,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		4D3FBB773040BD8B00B9C8E8 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		4DA1E70A2FD49FA0000C4169 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -124,7 +191,57 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		4D3FBB803040BD8B00B9C8E8 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 4DA1E70D2FD49FA0000C4169 /* DidWeights */;
+			targetProxy = 4D3FBB7F3040BD8B00B9C8E8 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		4D3FBB823040BD8B00B9C8E8 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 8C2UT78K3A;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "Abdulkarim-Mziya.DidWeightsTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/DidWeights.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/DidWeights";
+			};
+			name = Debug;
+		};
+		4D3FBB833040BD8B00B9C8E8 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 8C2UT78K3A;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "Abdulkarim-Mziya.DidWeightsTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/DidWeights.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/DidWeights";
+			};
+			name = Release;
+		};
 		4DA1E7172FD49FA2000C4169 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -315,6 +432,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		4D3FBB813040BD8B00B9C8E8 /* Build configuration list for PBXNativeTarget "DidWeightsTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4D3FBB823040BD8B00B9C8E8 /* Debug */,
+				4D3FBB833040BD8B00B9C8E8 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		4DA1E7092FD49FA0000C4169 /* Build configuration list for PBXProject "DidWeights" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
