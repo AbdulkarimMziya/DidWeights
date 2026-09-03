@@ -51,5 +51,21 @@ extension Workout {
             (lhs.sets.first?.order ?? 0) < (rhs.sets.first?.order ?? 0)
         }
     }
+    
+    var completedSetCount: Int {
+        let completedSets = self.sets.filter { $0.isCompleted == true}
+        return completedSets.count
+    }
+    
+    var totalVolume: Double {
+        self.sets
+            .filter { $0.isCompleted == true}
+            .compactMap { set -> Double? in
+                guard let reps = set.reps, let weight = set.weight else { return nil }
+                return Double(reps) * weight
+            }
+            .reduce(0.0, +)
+    }
+
 
 }

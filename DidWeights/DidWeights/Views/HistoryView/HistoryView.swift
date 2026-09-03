@@ -11,40 +11,54 @@ import SwiftUI
 struct MonthSection: Identifiable {
     let id: String
     let title: String
-    let workouts: [LegacyWorkout]
+    let workouts: [Workout]
+    let sortDate: Date
 }
 
 struct HistoryView: View {
     @Query(
-        filter: #Predicate<LegacyWorkout> { workout in
-            workout.endDate != nil
-        },
-        sort: \LegacyWorkout.startDate,
+        filter: #Predicate<Workout> { $0.endDate != nil },
+        sort: \Workout.startDate,
         order: .reverse,
     )
-    private var pastWorkouts: [LegacyWorkout]
+    private var pastWorkouts: [Workout]
     
     private var monthSections: [MonthSection] {
-        var buckets: [String: [LegacyWorkout]] = [:]        // empty dictionary
+        var buckets: [String: (date: Date, workouts: [Workout])] = [:]
         let calendar = Calendar.current
-
+     
         for workout in pastWorkouts {
             let year = calendar.component(.year, from: workout.startDate)
             let month = calendar.component(.month, from: workout.startDate)
-            let key = "\(year)-\(month)"                // "2026-7"
-
-            buckets[key, default: []].append(workout)   // add this workout to its bucket
+            let key = "\(year)-\(month)"
+     
+            var components = DateComponents()
+            components.year = year
+            components.month = month
+            let sortDate = calendar.date(from: components) ?? .distantPast
+     
+            if var existing = buckets[key] {
+                existing.workouts.append(workout)
+                buckets[key] = existing
+            } else {
+                buckets[key] = (date: sortDate, workouts: [workout])
+            }
         }
-
-        // Now turn the dictionary into an array of MonthSection, sorted newest first
-        var sections: [MonthSection] = []
-        for (key, workouts) in buckets {
-            let sortedWorkouts = workouts.sorted { $0.startDate > $1.startDate }
+    
+    var sections: [MonthSection] = []
+        for (key, bucket) in buckets {
+            let sortedWorkouts = bucket.workouts.sorted { $0.startDate > $1.startDate }
             let title = sortedWorkouts.first?.startDate.formatted(.dateTime.month(.wide).year()) ?? key
-            sections.append(MonthSection(id: key, title: title, workouts: sortedWorkouts))
+     
+            sections.append(MonthSection(
+                id: key,
+                title: title,
+                workouts: sortedWorkouts,
+                sortDate: bucket.date
+            ))
         }
-
-        return sections.sorted { $0.id > $1.id }
+     
+        return sections.sorted { $0.sortDate > $1.sortDate }
     }
     
     
@@ -62,7 +76,7 @@ struct HistoryView: View {
                         ForEach(monthSections) { section in
                             Section(section.title) {
                                 ForEach(section.workouts) { workout in
-                                    NavigationLink(value: workout) {
+                                    NavigationLink(value: workout.id) {
                                         HStack{
                                             Text(workout.name)
                                                 .fontWeight(.semibold)
@@ -77,8 +91,8 @@ struct HistoryView: View {
                 }
             }
             .navigationTitle("History")
-            .navigationDestination(for: LegacyWorkout.self) { workout in
-                WorkoutDetailView(workout: workout)
+            .navigationDestination(for: UUID.self) { workoutID in
+                WorkoutDetailView(workoutID: workoutID)
             }
         }
     }
