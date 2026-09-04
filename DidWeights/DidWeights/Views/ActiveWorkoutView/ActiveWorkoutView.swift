@@ -22,14 +22,14 @@ enum FinishWorkoutAlert: Identifiable {
     var id: Self { self }
 }
 
+/// Wrapper:  owns the query, decides which of three states to render.
 struct ActiveWorkoutView: View {
-    @Environment(\.dismiss) private var dismiss
     @Query(
         filter: #Predicate<Workout> { $0.endDate == nil },
-        sort: \Workout.startDate, order: .reverse,
+        sort: \Workout.startDate, order: .reverse
     )
     private var activeWorkouts: [Workout]
-    
+
     var body: some View {
         switch activeWorkouts.count {
         case 0:
@@ -38,10 +38,8 @@ struct ActiveWorkoutView: View {
                 systemImage: "exclamationmark.triangle",
                 description: Text("Something went wrong starting this session.")
             )
-                
         case 1:
             ActiveWorkoutContent(workout: activeWorkouts[0])
-            
         default:
             ContentUnavailableView(
                 "Multiple Active Workouts Detected",
@@ -52,105 +50,98 @@ struct ActiveWorkoutView: View {
     }
 }
 
+/// Content: takes one live Workout, every mutation goes through
+/// WorkoutRepository (and ExerciseRepository for catalog lookups).
 struct ActiveWorkoutContent: View {
+    @Bindable var workout: Workout
     @Environment(\.dismiss) private var dismiss
-    @Environment(WorkoutManager.self) private var manager
     @Environment(\.modelContext) private var modelContext
 
+    private var workouts: WorkoutRepository { WorkoutRepository(context: modelContext) }
+    private var exercises: ExerciseRepository { ExerciseRepository(context: modelContext) }
+
     @State private var activeAlert: FinishWorkoutAlert?
-    @FocusState private var focusedField: UUID?
-    
-    private var workout: Workout
-    
-    init(workout: Workout) {
-        self.workout = workout
+    @State private var errorMessage: String?
+    @State private var showAddExercise = false
+    @FocusState private var focusedField: Field?
+
+    // A Hashable enum instead of a bare UUID, so weight and reps fields on
+    // the same set never share one focus identity (the old bug where
+    // "next field" couldn't work because both fields used workSet.id).
+    enum Field: Hashable {
+        case reps(UUID)
+        case weight(UUID)
     }
-    
+
     var body: some View {
         NavigationStack {
-            Group {
-                if let workout = manager.activeWorkout {
-                    
-                    ScrollView {
-                        VStack(spacing: 24) {
-                            
-                            WorkoutHeaderView(workout: workout)
-                            
-                            ExerciseListView(exercises: workout.exercises, focusedField: $focusedField)
-                            
-                            ActionButtonView()
-                        }
-                        .padding(.horizontal)
-                        
-                        .toolbar {
-                            ToolbarItem(placement: .confirmationAction) {
-                                Button("Finish") {
-                                    // TODO: Finish action logic
-                                    handleFinishTapped()
-                                }
-                                .fontWeight(.bold)
-                                
-                            }
-                        }
-                    }
-                    
-                } else {
-                    ContentUnavailableView(
-                        "No Active Workout",
-                        systemImage: "dumbbell"
+            ScrollView {
+                VStack(spacing: 24) {
+                    WorkoutHeaderView(workout: workout)
+
+                    ExerciseListView(
+                        workout: workout,
+                        focusedField: $focusedField,
+                        errorMessage: $errorMessage
+                    )
+
+                    ActionButtonView(
+                        workout: workout,
+                        showAddExercise: $showAddExercise
                     )
                 }
+                .padding(.horizontal)
             }
             .scrollBounceBehavior(.always)
             .navigationTitle("Workout Session")
             .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Finish") {
+                        handleFinishTapped()
+                    }
+                    .fontWeight(.bold)
+                }
                 ToolbarItemGroup(placement: .keyboard) {
                     Spacer()
-
-                    Button("Done") {
-                        focusedField = nil
-                    }
+                    Button("Done") { focusedField = nil }
                 }
             }
+            .sheet(isPresented: $showAddExercise) {
+                AddExerciseSheet(workout: workout)
+            }
+            .alert("Something went wrong", isPresented: Binding(
+                get: { errorMessage != nil },
+                set: { if !$0 { errorMessage = nil } }
+            )) {
+                Button("OK", role: .cancel) { errorMessage = nil }
+            } message: {
+                Text(errorMessage ?? "")
+            }
             .alert(item: $activeAlert) { alert in
-
                 switch alert {
-
                 case .cancelEmptyWorkout:
-
                     return Alert(
                         title: Text("Cancel Workout?"),
                         message: Text("Are you sure you want to cancel this workout? All progress will be lost."),
                         primaryButton: .destructive(Text("Cancel Workout")) {
-                            manager.cancelWorkout()
-                            dismiss()
+                            performCancel()
                         },
                         secondaryButton: .cancel(Text("Resume"))
                     )
-
                 case .unfinishedSets:
-
-                    // Your unfinished sets alert
-                    return Alert (
+                    return Alert(
                         title: Text("Finish Workout?"),
                         message: Text("There are sets in this workout that haven't been marked as completed."),
                         primaryButton: .default(Text("Finish Anyway"), action: {
-                            manager.finishWorkout(modelContext: modelContext)
-                            dismiss()
+                            performFinish()
                         }),
                         secondaryButton: .cancel(Text("Resume"))
                     )
-
                 case .finishWorkout:
-
-                    // Your finish confirmation
                     return Alert(
                         title: Text("Finish Workout?"),
                         primaryButton: .default(Text("Finish"), action: {
-                            manager.finishWorkout(modelContext: modelContext)
-                            workout.endDate = .now
-                            modelContext.insert(workout)
-                            dismiss()
+                            performFinish()
                         }),
                         secondaryButton: .cancel(Text("Cancel"))
                     )
@@ -158,192 +149,160 @@ struct ActiveWorkoutContent: View {
             }
         }
     }
-    
-    private func handleFinishTapped() {
-        guard let workout = manager.activeWorkout else { return }
 
-        if workout.exercises.isEmpty {
+    // MARK: - Finish flow
+
+    private func handleFinishTapped() {
+        // No exercises at all: use exerciseGroups, since there's no
+        // separate LoggedExercise array anymore — an exercise only
+        // "exists" in a workout by virtue of having sets.
+        if workout.exerciseGroups.isEmpty {
             activeAlert = .cancelEmptyWorkout
             return
         }
 
-        let hasUnfinishedSets = workout.exercises.contains { exercise in
-            exercise.sets.contains { !$0.isCompleted }
-        }
+        // Any set not completed, checked directly against the flat
+        // sets relationship — grouping isn't needed for this check.
+        let hasUnfinishedSets = workout.sets.contains { !$0.isCompleted }
 
-        if hasUnfinishedSets {
-            activeAlert = .unfinishedSets
-        } else {
-            activeAlert = .finishWorkout
+        activeAlert = hasUnfinishedSets ? .unfinishedSets : .finishWorkout
+    }
+
+    private func performFinish() {
+        do {
+            try workouts.finish(workout)
+            dismiss()
+        } catch {
+            errorMessage = "Couldn't finish this workout: \(error.localizedDescription)"
         }
     }
-    
+
+    private func performCancel() {
+        do {
+            try workouts.cancel(workout)
+            dismiss()
+        } catch {
+            errorMessage = "Couldn't cancel this workout: \(error.localizedDescription)"
+        }
+    }
 }
 
+// MARK: - Exercise list
+
 struct ExerciseListView: View {
-    var exercises: [LoggedExercise]
-    @FocusState.Binding var focusedField: UUID?
+    let workout: Workout
+    @FocusState.Binding var focusedField: ActiveWorkoutContent.Field?
+    @Binding var errorMessage: String?
 
     var body: some View {
         VStack(spacing: 20) {
-            ForEach(exercises) { exercise in
-                ExerciseRowView(exercise: exercise, focusedField: $focusedField)
+            ForEach(workout.exerciseGroups) { group in
+                ExerciseGroupView(
+                    workout: workout,
+                    group: group,
+                    focusedField: $focusedField,
+                    errorMessage: $errorMessage
+                )
             }
         }
     }
 }
 
+struct ExerciseGroupView: View {
+    let workout: Workout
+    let group: ExerciseGroup
+    @Environment(\.modelContext) private var modelContext
+    @FocusState.Binding var focusedField: ActiveWorkoutContent.Field?
+    @Binding var errorMessage: String?
 
-struct ExerciseRowView: View {
-    let exercise: LoggedExercise
-    
-    @FocusState.Binding var focusedField: UUID?
+    private var workouts: WorkoutRepository { WorkoutRepository(context: modelContext) }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-
-            ExerciseHeaderView(exercise: exercise)
+            HStack {
+                Text(group.exercise.name)
+                    .font(.headline)
+                Spacer()
+                Menu {
+                    Button(role: .destructive) {
+                        do {
+                            try workouts.removeExercise(group.exercise, from: workout)
+                        } catch {
+                            errorMessage = "Couldn't remove exercise: \(error.localizedDescription)"
+                        }
+                    } label: {
+                        Label("Remove Exercise", systemImage: "trash")
+                    }
+                } label: {
+                    Image(systemName: "ellipsis")
+                        .font(.system(size: 28))
+                        .foregroundStyle(ActivePalette.primaryButtonText)
+                        .frame(width: 40, height: 24)
+                        .background(ActivePalette.pillBackground)
+                        .clipShape(.capsule)
+                }
+            }
 
             SetHeaderView()
-
             Divider()
 
-            ForEach(Array(exercise.sets.enumerated()), id: \.element.id) { index, set in
-                WorkoutSetRowView(
-                    index: index,
-                    exerciseID: exercise.id,
-                    workSet: set,
-                    focusedField: $focusedField,
-                )
+            ForEach(Array(group.sets.enumerated()), id: \.element.id) { index, set in
+                ExerciseSetRowView(set: set, index: index, focusedField: $focusedField)
             }
 
-            ExerciseActionsView(
-                exerciseID: exercise.id,
-                setCount: exercise.sets.count
-            )
-        }
-    }
-}
-
-
-struct ExerciseHeaderView: View {
-    @Environment(WorkoutManager.self) private var manager
-
-    let exercise: LoggedExercise
-    
-    private var exerciseNameBinding: Binding<String> {
-        Binding {
-            exercise.exerciseName
-        } set: { newValue in
-            manager.updateExerciseName(exerciseID: exercise.id, name: newValue)
-        }
-
-    }
-
-    var body: some View {
-        HStack {
-            TextField("New Exercise", text: exerciseNameBinding)
-                .padding(4)
-                .frame(width: 200)
-                .font(.headline)
-                .lineLimit(2)
-                
-
-            Spacer()
-
-            Menu {
-                Button(role: .destructive) {
-                    // Manager: Remove Exercise
-                    manager.removeExercise(withID: exercise.id)
-                    
-                } label: {
-                    Label("Remove Exercise", systemImage: "trash")
+            HStack(spacing: 12) {
+                if !group.sets.isEmpty {
+                    Button(role: .destructive) {
+                        do {
+                            try workouts.removeLastSet(of: group.exercise, in: workout)
+                        } catch {
+                            errorMessage = "Couldn't remove set: \(error.localizedDescription)"
+                        }
+                    } label: {
+                        Spacer()
+                        Label("Delete Set", systemImage: "trash")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                        Spacer()
+                    }
+                    .padding(.vertical, 8)
+                    .background(Color.red.opacity(0.15))
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
                 }
-            } label: {
-                Image(systemName: "ellipsis")
-                    .font(.system(size: 28))
-                    .foregroundStyle(ActivePalette.primaryButtonText)
-                    .frame(width: 40, height: 24)
-                    .background(ActivePalette.pillBackground)
-                    .clipShape(.capsule)
-            }
-        }
-        
-    }
-}
 
-struct ExerciseActionsView: View {
-    @Environment(WorkoutManager.self) private var manager
-
-    let exerciseID: UUID
-    let setCount: Int
-
-    var body: some View {
-        HStack(spacing: 12) {
-
-            if setCount > 0 {
-                Button(role: .destructive) {
-                    // Manager: Remove Last Set
-                    manager.removeLastSet(from: exerciseID)
-
+                Button {
+                    do {
+                        try workouts.addSet(to: workout, exercise: group.exercise)
+                    } catch {
+                        errorMessage = "Couldn't add set: \(error.localizedDescription)"
+                    }
                 } label: {
                     Spacer()
-                    Label("Delete Set", systemImage: "trash")
+                    Label("Add Set", systemImage: "plus")
                         .font(.subheadline)
                         .fontWeight(.medium)
+                        .foregroundStyle(ActivePalette.primaryButtonText)
                     Spacer()
                 }
                 .padding(.vertical, 8)
-                .background(Color.red.opacity(0.15))
+                .background(ActivePalette.primaryButtonBackground)
                 .clipShape(RoundedRectangle(cornerRadius: 8))
             }
-
-            Button {
-                // Manager: Add Set
-                manager.addSet(to: exerciseID)
-            } label: {
-                Spacer()
-                Label("Add Set", systemImage: "plus")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                    .foregroundStyle(ActivePalette.primaryButtonText)
-                Spacer()
-            }
-            .padding(.vertical, 8)
-            .background(ActivePalette.primaryButtonBackground)
-            .clipShape(RoundedRectangle(cornerRadius: 8))
         }
-        
     }
 }
 
-
-
-
 struct SetHeaderView: View {
-
     var body: some View {
         HStack {
-            Text("Set")
-                .frame(width: 35, alignment: .leading)
-
+            Text("Set").frame(width: 35, alignment: .leading)
             Spacer()
-
-            Text("Previous")
-                .frame(width: 70, alignment: .center)
-
+            Text("Previous").frame(width: 70, alignment: .center)
             Spacer()
-
-            Text("lbs")
-                .frame(width: 60)
-
+            Text("lbs").frame(width: 60)
             Spacer()
-
-            Text("Reps")
-                .frame(width: 50, alignment: .center)
-
+            Text("Reps").frame(width: 50, alignment: .center)
             Spacer()
-
             Image(systemName: "checkmark.square.fill")
                 .frame(width: 30, alignment: .trailing)
                 .foregroundStyle(.secondary)
@@ -352,115 +311,96 @@ struct SetHeaderView: View {
         .font(.subheadline)
         .fontWeight(.semibold)
         .foregroundStyle(.secondary)
-    
     }
 }
 
-struct WorkoutSetRowView: View {
-    @Environment(WorkoutManager.self) private var manager
-    
+struct ExerciseSetRowView: View {
+    @Bindable var set: ExerciseSet
     let index: Int
-    let exerciseID: UUID
-    let workSet: WorkoutSet
-    
-    @FocusState.Binding var focusedField: UUID?
-    
-    private var weightBinding: Binding<Double?> {
-        Binding(
-            get: {
-                workSet.weight
-            },
-            set: { newValue in
-                manager.updateWeight(
-                    exerciseID: exerciseID,
-                    setID: workSet.id,
-                    weight: newValue
-                )
-            }
-        )
-    }
-    
-    private var repsBinding: Binding<Int?> {
-        Binding(
-            get: {
-                workSet.reps
-            },
-            set: { newValue in
-                manager.updateReps(
-                    exerciseID: exerciseID,
-                    setID: workSet.id,
-                    reps: newValue
-                )
-            }
-        )
-    }
-    
+    @Environment(\.modelContext) private var modelContext
+    @FocusState.Binding var focusedField: ActiveWorkoutContent.Field?
+    @State private var errorMessage: String?
+
+    private var workouts: WorkoutRepository { WorkoutRepository(context: modelContext) }
+
     var body: some View {
-        
         HStack {
-            
             Text("\(index + 1)")
                 .font(.subheadline)
                 .fontWeight(.bold)
                 .frame(width: 35, alignment: .center)
-            
+
             Spacer()
-            
+
             Text("—")
                 .frame(width: 70, alignment: .center)
                 .font(.subheadline)
                 .fontWeight(.semibold)
                 .foregroundStyle(.secondary)
-                
-            
+
             Spacer()
-            
-            TextField("0", value: weightBinding, format: .number)
+
+            // @Bindable gives a direct binding to the model - no manual
+            TextField("0", value: $set.weight, format: .number)
                 .keyboardType(.decimalPad)
-                .focused($focusedField, equals: workSet.id)
+                .focused($focusedField, equals: .weight(set.id))
                 .multilineTextAlignment(.center)
                 .frame(width: 55)
                 .padding(.vertical, 4)
-                .overlay(
-                    Capsule()
-                        .stroke(.blue)
-                )
-               
-            
+                .overlay(Capsule().stroke(.blue))
+                .onChange(of: set.weight) {
+                    try? workouts.updateSet(set, reps: set.reps, weight: set.weight)
+                }
+
             Spacer()
-            
-            TextField("0", value: repsBinding, format: .number)
+
+            TextField("0", value: $set.reps, format: .number)
                 .keyboardType(.numberPad)
-                .focused($focusedField, equals: workSet.id)
+                .focused($focusedField, equals: .reps(set.id))
                 .multilineTextAlignment(.center)
                 .frame(width: 55)
                 .padding(.vertical, 4)
-                .overlay(
-                    Capsule()
-                        .stroke(.blue)
-                )
-            
+                .overlay(Capsule().stroke(.blue))
+                .onChange(of: set.reps) {
+                    try? workouts.updateSet(set, reps: set.reps, weight: set.weight)
+                }
+
             Spacer()
-            
+
             Button {
-                manager.toggleSetCompletion(exerciseID: exerciseID, setID: workSet.id)
+                do {
+                    try workouts.toggleCompletion(of: set)
+                } catch {
+                    errorMessage = "This set needs reps entered before it can be completed."
+                }
             } label: {
-                Image(systemName: workSet.isCompleted ? "checkmark.square.fill" : "square")
+                Image(systemName: set.isCompleted ? "checkmark.square.fill" : "square")
                     .font(.title2)
-                    .foregroundStyle(workSet.isCompleted ? .green : .gray)
+                    .foregroundStyle(set.isCompleted ? .green : .gray)
             }
             .frame(width: 24)
             .buttonStyle(.borderless)
-
+            // Disabled state uses the SAME isCompletable rule the repository
+            // enforces — one definition, read from two places, per the trap.
+            .disabled(!set.isCompleted && !set.isCompletable)
+            .alert("Cannot complete set", isPresented: Binding(
+                get: { errorMessage != nil },
+                set: { if !$0 { errorMessage = nil } }
+            )) {
+                Button("OK", role: .cancel) { errorMessage = nil }
+            } message: {
+                Text(errorMessage ?? "")
+            }
         }
         .padding(.vertical, 4)
-        .background(workSet.isCompleted ? .green.opacity(0.2) : .clear)
-      
+        .background(set.isCompleted ? .green.opacity(0.2) : .clear)
     }
 }
 
+// MARK: - Header
+
 struct WorkoutHeaderView: View {
-    let workout: LoggedWorkout
+    let workout: Workout
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -470,12 +410,11 @@ struct WorkoutHeaderView: View {
                     .foregroundColor(.blue)
                 Text(workout.startDate, style: .date)
             }
-            
             HStack(spacing: 12) {
                 Image(systemName: "clock")
                     .frame(width: 20)
                     .foregroundColor(.green)
-                WorkoutTimerView(startDate: workout.startDate)
+                WorkoutTimerView(workout: workout)
             }
         }
         .font(.subheadline)
@@ -485,18 +424,22 @@ struct WorkoutHeaderView: View {
     }
 }
 
+// MARK: - Bottom actions
+
 struct ActionButtonView: View {
+    let workout: Workout
+    @Binding var showAddExercise: Bool
     @Environment(\.dismiss) private var dismiss
-    @Environment(WorkoutManager.self) private var manager
-    
+    @Environment(\.modelContext) private var modelContext
     @State private var showCancelAlert = false
-    
+    @State private var errorMessage: String?
+
+    private var workouts: WorkoutRepository { WorkoutRepository(context: modelContext) }
+
     var body: some View {
         VStack(spacing: 12) {
             Button {
-                
-                // Manager: Add Exercise
-                manager.addExercise()
+                showAddExercise = true
             } label: {
                 Text("Add Exercise")
                     .font(.system(size: 20, weight: .bold))
@@ -506,9 +449,8 @@ struct ActionButtonView: View {
                     .background(ActivePalette.primaryButtonBackground)
                     .clipShape(.buttonBorder)
             }
-            
+
             Button(role: .destructive) {
-                // TODO: Cancel action
                 showCancelAlert = true
             } label: {
                 Text("Cancel Workout")
@@ -519,33 +461,27 @@ struct ActionButtonView: View {
             }
             .alert("Cancel Workout?", isPresented: $showCancelAlert) {
                 Button("Cancel Workout", role: .destructive) {
-                       manager.cancelWorkout()
-                       dismiss()
-                   }
-
-                   Button("Resume", role: .cancel) { }
+                    do {
+                        try workouts.cancel(workout)
+                        dismiss()
+                    } catch {
+                        errorMessage = "Couldn't cancel this workout."
+                    }
+                }
+                Button("Resume", role: .cancel) {}
             } message: {
                 Text("Are you sure you want to cancel this workout? All progress will be lost.")
             }
         }
     }
-    
 }
 
 #Preview {
-    // 1. Create a preview instance
-    let mockManager = WorkoutManager()
-    
-    // 2. Start a mock session so the view has an active workout to display
-    mockManager.startWorkout()
-    
-    // 3. (Optional) Populate with a sample exercise so it's not empty in your canvas
-    let sampleExercise = LoggedExercise(exerciseID: UUID(), exerciseName: "Bench Press")
-    
-    mockManager.addExercise()
-   
+    let container = try! ModelContainer.inMemory(seeded: true)
+    let context = container.mainContext
+    let descriptor = FetchDescriptor<Workout>()
+    let workout = (try? context.fetch(descriptor))?.first ?? Workout(name: "Preview")
 
-    return ActiveWorkoutView()
-        .environment(mockManager) // 4. Inject it here
+    return ActiveWorkoutContent(workout: workout)
+        .modelContainer(container)
 }
-                
