@@ -19,37 +19,45 @@ private enum HomePalette {
 }
 
 struct HomeView: View {
-    @Environment(WorkoutManager.self) private var manager
     @Environment(\.modelContext) private var modelContext
+
+    // Retargeted onto the new schema — same filter shape as
+    // ActiveWorkoutView's wrapper. This is what "Resume Workout" now
+    // reads instead of manager.activeWorkout.
+    @Query(filter: #Predicate<Workout> { $0.endDate == nil })
+    private var activeWorkouts: [Workout]
+
     @Query(sort: \LegacySavedWorkout.name) private var savedPlans: [LegacySavedWorkout]
-    
+
     @State private var presentWorkout = false
     @State private var presentCreatePlan = false
     @State private var selectedPlan: LegacySavedWorkout?
     @State private var planPendingEdit: LegacySavedWorkout?
     @State private var planPendingDelete: LegacySavedWorkout?
-    
+    @State private var errorMessage: String?
+
+    private var workouts: WorkoutRepository { WorkoutRepository(context: modelContext) }
+
     let columns = [
         GridItem(.flexible(), spacing: 16),
         GridItem(.flexible(), spacing: 16)
     ]
-    
+
     var body: some View {
         NavigationStack {
             ScrollView(.vertical) {
                 VStack(spacing: 24) {
+                    
                     // Section 1: Quick Start
                     VStack(alignment: .leading, spacing: 12) {
                         Text("Quick Start")
                             .font(.title2.bold())
                             .foregroundStyle(HomePalette.headingText)
-                        
+
                         Button {
-                            // TODO: Start Empty Workout Action
-                            manager.startWorkout()
-                            presentWorkout = true
+                            handleStartTapped()
                         } label: {
-                            Text(manager.activeWorkout == nil ? "Start a Workout" : "Resume Workout")
+                            Text(activeWorkouts.isEmpty ? "Start a Workout" : "Resume Workout")
                                 .font(.system(size: 18, weight: .semibold))
                                 .foregroundStyle(HomePalette.primaryButtonText)
                                 .padding(.vertical, 14)
@@ -72,11 +80,10 @@ struct HomeView: View {
                             Text("Workout Plans")
                                 .font(.title2.bold())
                                 .foregroundStyle(HomePalette.headingText)
-                            
+
                             Spacer()
-                            
+
                             Button {
-                                // TODO: Create Plan
                                 presentCreatePlan = true
                             } label: {
                                 Image(systemName: "plus")
@@ -86,8 +93,7 @@ struct HomeView: View {
                                     .background(HomePalette.primaryButtonBackground, in: .circle)
                             }
                         }
-                        
-                        // Workout Plan grids
+
                         LazyVGrid(columns: columns, spacing: 16) {
                             ForEach(savedPlans) { plan in
                                 WorkoutTemplateCard(plan: plan) {
@@ -108,8 +114,7 @@ struct HomeView: View {
                         ) {
                             if let plan = selectedPlan {
                                 Button("Start Workout") {
-                                    manager.startWorkout(from: plan)
-                                    presentWorkout = true
+                                    errorMessage = "Starting from a plan is coming back in the next update."
                                     selectedPlan = nil
                                 }
                                 Button("Delete Plan", role: .destructive) {
@@ -141,10 +146,10 @@ struct HomeView: View {
                                 Text("This can't be undone.")
                             }
                     }
-                    
+
                 }
                 .padding()
-                
+
             }
             .background(HomePalette.pageBackground.ignoresSafeArea())
             .scrollBounceBehavior(.always)
@@ -158,8 +163,29 @@ struct HomeView: View {
             .sheet(isPresented: $presentCreatePlan) {
                 CreatePlanView()
             }
-            
+            .alert("Something went wrong", isPresented: Binding(
+                get: { errorMessage != nil },
+                set: { if !$0 { errorMessage = nil } }
+            )) {
+                Button("OK", role: .cancel) { errorMessage = nil }
+            } message: {
+                Text(errorMessage ?? "")
+            }
         }
+    }
+
+    private func handleStartTapped() {
+        if activeWorkouts.isEmpty {
+            do {
+                try workouts.startEmptyWorkout(named: "Workout")
+            } catch {
+                errorMessage = "Couldn't start a workout: \(error.localizedDescription)"
+                return
+            }
+        }
+        // Either a workout was just created, or one already existed —
+        // either way, ActiveWorkoutView's own @Query finds it.
+        presentWorkout = true
     }
 }
 
@@ -221,9 +247,7 @@ struct WorkoutTemplateCard: View {
 }
 
 #Preview {
-    // 1. Create a preview instance
-    let mockManager = WorkoutManager()
-    
-    HomeView()
-        .environment(mockManager)
+    let container = try! ModelContainer.inMemory(seeded: false)
+    return HomeView()
+        .modelContainer(container)
 }
