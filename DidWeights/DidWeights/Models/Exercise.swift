@@ -18,11 +18,15 @@ final class Exercise: Hashable {
     @Relationship(deleteRule: .deny, inverse: \ExerciseSet.exercise)
     var sets: [ExerciseSet]
 
+    @Relationship(deleteRule: .nullify, inverse: \WorkoutPreset.exercises)
+    var presets: [WorkoutPreset]
+
     init(name: String, muscleGroup: String? = nil) {
         self.id = UUID()
         self.name = name
         self.muscleGroup = muscleGroup
         self.createdAt = .now
         self.sets = []
+        self.presets = []
     }
 }
