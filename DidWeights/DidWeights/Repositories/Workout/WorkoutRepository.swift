@@ -18,9 +18,7 @@ struct WorkoutRepository {
 
     func activeWorkout() throws -> Workout? {
         var descriptor = FetchDescriptor<Workout>(
-            predicate: #Predicate<Workout> { workout in
-                workout.endDate.flatMap { _ in true } == nil
-            }
+            predicate: #Predicate<Workout> { $0.endDate == nil }
         )
 
         descriptor.fetchLimit = 2
