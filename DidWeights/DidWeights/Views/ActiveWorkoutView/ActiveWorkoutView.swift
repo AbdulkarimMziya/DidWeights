@@ -93,7 +93,7 @@ struct ActiveWorkoutContent: View {
                 .padding(.horizontal)
             }
             .scrollBounceBehavior(.always)
-            .navigationTitle("Workout Session")
+            .navigationTitle(workout.name)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Finish") {

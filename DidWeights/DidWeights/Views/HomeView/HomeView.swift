@@ -21,22 +21,21 @@ private enum HomePalette {
 struct HomeView: View {
     @Environment(\.modelContext) private var modelContext
 
-    // Retargeted onto the new schema — same filter shape as
-    // ActiveWorkoutView's wrapper. This is what "Resume Workout" now
-    // reads instead of manager.activeWorkout.
     @Query(filter: #Predicate<Workout> { $0.endDate == nil })
     private var activeWorkouts: [Workout]
 
-    @Query(sort: \LegacySavedWorkout.name) private var savedPlans: [LegacySavedWorkout]
+    // Retargeted onto the new schema — no more LegacySavedWorkout.
+    @Query(sort: \WorkoutPreset.name) private var savedPlans: [WorkoutPreset]
 
     @State private var presentWorkout = false
     @State private var presentCreatePlan = false
-    @State private var selectedPlan: LegacySavedWorkout?
-    @State private var planPendingEdit: LegacySavedWorkout?
-    @State private var planPendingDelete: LegacySavedWorkout?
+    @State private var selectedPlan: WorkoutPreset?
+    @State private var planPendingEdit: WorkoutPreset?
+    @State private var planPendingDelete: WorkoutPreset?
     @State private var errorMessage: String?
 
     private var workouts: WorkoutRepository { WorkoutRepository(context: modelContext) }
+    private var presets: PresetRepository { PresetRepository(context: modelContext) }
 
     let columns = [
         GridItem(.flexible(), spacing: 16),
@@ -47,7 +46,6 @@ struct HomeView: View {
         NavigationStack {
             ScrollView(.vertical) {
                 VStack(spacing: 24) {
-                    
                     // Section 1: Quick Start
                     VStack(alignment: .leading, spacing: 12) {
                         Text("Quick Start")
@@ -114,7 +112,7 @@ struct HomeView: View {
                         ) {
                             if let plan = selectedPlan {
                                 Button("Start Workout") {
-                                    errorMessage = "Starting from a plan is coming back in the next update."
+                                    handleStartFromPlanTapped(plan)
                                     selectedPlan = nil
                                 }
                                 Button("Delete Plan", role: .destructive) {
@@ -135,7 +133,11 @@ struct HomeView: View {
                             ) {
                                 Button("Delete", role: .destructive) {
                                     if let plan = planPendingDelete {
-                                        modelContext.delete(plan)
+                                        do {
+                                            try presets.delete(plan)
+                                        } catch {
+                                            errorMessage = "Couldn't delete this plan: \(error.localizedDescription)"
+                                        }
                                     }
                                     planPendingDelete = nil
                                 }
@@ -183,21 +185,31 @@ struct HomeView: View {
                 return
             }
         }
-        // Either a workout was just created, or one already existed —
-        // either way, ActiveWorkoutView's own @Query finds it.
         presentWorkout = true
+    }
+
+    private func handleStartFromPlanTapped(_ plan: WorkoutPreset) {
+        guard activeWorkouts.isEmpty else {
+            // A workout is already active — resume it rather than trying
+            // to start a second one, same rule as the quick-start button.
+            presentWorkout = true
+            return
+        }
+
+        do {
+            try workouts.startWorkout(from: plan)
+            presentWorkout = true
+        } catch {
+            errorMessage = "Couldn't start this plan: \(error.localizedDescription)"
+        }
     }
 }
 
 
 
 struct WorkoutTemplateCard: View {
-    let plan: LegacySavedWorkout
+    let plan: WorkoutPreset
     var onOptions: () -> Void
-
-    private var exerciseCount: Int {
-        (try? PersistanceHelper.transformFromData(plan.workoutData))?.exercises.count ?? 0
-    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -209,7 +221,8 @@ struct WorkoutTemplateCard: View {
             Spacer(minLength: 0)
 
             VStack(alignment: .leading, spacing: 4) {
-                Text("\(exerciseCount) exercises")
+                // No decode — a direct relationship count.
+                Text("\(plan.exercises.count) exercises")
                     .font(.subheadline)
                     .foregroundStyle(HomePalette.secondaryText)
 
