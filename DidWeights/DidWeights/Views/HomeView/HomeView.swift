@@ -92,39 +92,43 @@ struct HomeView: View {
                             }
                         }
 
-                        LazyVGrid(columns: columns, spacing: 16) {
-                            ForEach(savedPlans) { plan in
-                                WorkoutTemplateCard(plan: plan) {
-                                    selectedPlan = plan
-                                }
-                                .onTapGesture {
-                                    planPendingEdit = plan
-                                }
-                            }
-                        }
-                        .confirmationDialog(
-                            selectedPlan?.name ?? "Plan",
-                            isPresented: Binding(
-                                get: { selectedPlan != nil },
-                                set: { if !$0 { selectedPlan = nil } }
-                            ),
-                            titleVisibility: .visible
-                        ) {
-                            if let plan = selectedPlan {
-                                Button("Start Workout") {
-                                    handleStartFromPlanTapped(plan)
-                                    selectedPlan = nil
-                                }
-                                Button("Delete Plan", role: .destructive) {
-                                    planPendingDelete = plan
-                                    selectedPlan = nil
-                                }
-                                Button("Cancel", role: .cancel) {
-                                    selectedPlan = nil
+                        if savedPlans.isEmpty {
+                            AddPlanCard()
+                                .onTapGesture { presentCreatePlan = true }
+                        } else {
+                            LazyVGrid(columns: columns, spacing: 16) {
+                                ForEach(savedPlans) { plan in
+                                    WorkoutTemplateCard(plan: plan) {
+                                        selectedPlan = plan
+                                    }
+                                    .onTapGesture {
+                                        planPendingEdit = plan
+                                    }
                                 }
                             }
-                        }
-                        .alert(
+                            .confirmationDialog(
+                                selectedPlan?.name ?? "Plan",
+                                isPresented: Binding(
+                                    get: { selectedPlan != nil },
+                                    set: { if !$0 { selectedPlan = nil } }
+                                ),
+                                titleVisibility: .visible
+                            ) {
+                                if let plan = selectedPlan {
+                                    Button("Start Workout") {
+                                        handleStartFromPlanTapped(plan)
+                                        selectedPlan = nil
+                                    }
+                                    Button("Delete Plan", role: .destructive) {
+                                        planPendingDelete = plan
+                                        selectedPlan = nil
+                                    }
+                                    Button("Cancel", role: .cancel) {
+                                        selectedPlan = nil
+                                    }
+                                }
+                            }
+                            .alert(
                                 "Delete \(planPendingDelete?.name ?? "Plan")?",
                                 isPresented: Binding(
                                     get: { planPendingDelete != nil },
@@ -147,6 +151,7 @@ struct HomeView: View {
                             } message: {
                                 Text("This can't be undone.")
                             }
+                        }
                     }
 
                 }
@@ -256,6 +261,28 @@ struct WorkoutTemplateCard: View {
             .accessibilityHint("Start, delete, or view options for \(plan.name)")
             .padding(6)
         }
+    }
+}
+
+// Shown in place of the plan grid when the user has no saved plans:
+// same footprint as WorkoutTemplateCard, drawn as a dashed outline.
+struct AddPlanCard: View {
+    var body: some View {
+        Text("Tap to Add a Plan")
+            .font(.headline)
+            .foregroundStyle(HomePalette.secondaryText)
+            .frame(maxWidth: .infinity, minHeight: 110)
+            .padding()
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .strokeBorder(
+                        HomePalette.secondaryText.opacity(0.5),
+                        style: StrokeStyle(lineWidth: 1.5, dash: [6])
+                    )
+            )
+            .contentShape(Rectangle())
+            .accessibilityAddTraits(.isButton)
+            .accessibilityLabel("Add a plan")
     }
 }
 
