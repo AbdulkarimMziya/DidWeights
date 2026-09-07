@@ -16,7 +16,6 @@ struct DidWeightsApp: App {
             SplashScreenView()
         }
         .modelContainer(for: [
-            LegacyWorkout.self, LegacySavedWorkout.self, LegacyExercise.self,
             Workout.self, Exercise.self, ExerciseSet.self, WorkoutPreset.self
         ])
     }

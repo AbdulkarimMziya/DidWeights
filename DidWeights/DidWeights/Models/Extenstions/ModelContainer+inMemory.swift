@@ -16,10 +16,7 @@ extension ModelContainer {
             Workout.self,
             Exercise.self,
             ExerciseSet.self,
-            WorkoutPreset.self,
-            LegacyWorkout.self,
-            LegacySavedWorkout.self,
-            LegacyExercise.self
+            WorkoutPreset.self
         ])
         
         // 2. Pair the schema directly to your in-memory configuration
