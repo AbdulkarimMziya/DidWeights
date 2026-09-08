@@ -8,7 +8,7 @@
 import SwiftData
 import SwiftUI
 
-struct WorkoutDetailView: View {
+struct HistoryDetailView: View {
     private let workoutID: UUID
     @Query private var matches: [Workout]
     
@@ -19,7 +19,7 @@ struct WorkoutDetailView: View {
     
     var body: some View {
         if let workout = matches.first {
-            WorkoutDetailContent(workout: workout)
+            HistoryDetailContent(workout: workout)
         } else {
             ContentUnavailableView(
                 "Workout Not Found",
@@ -29,11 +29,20 @@ struct WorkoutDetailView: View {
     }
 }
 
-private struct WorkoutDetailContent: View {
+private struct HistoryDetailContent: View {
     let workout: Workout
 
     var body: some View {
         List {
+            Section {
+                Text(summaryLine)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .listRowSeparator(.hidden)
+                    .listRowBackground(Color.clear)
+            }
+
             ForEach(workout.exerciseGroups) { group in
                 Section(group.exercise.name) {
                     ForEach(group.sets) { set in
@@ -52,6 +61,28 @@ private struct WorkoutDetailContent: View {
         }
         .navigationTitle(workout.name)
     }
+
+    // View-layer formatting only, same spirit as WorkoutTimerView.elapsedString.
+    private var summaryLine: String {
+        let count = workout.exerciseGroups.count
+        let exercises = "\(count) \(count == 1 ? "exercise" : "exercises")"
+        return "\(durationText) · \(exercises)"
+    }
+
+    // "1h 12min" / "1h" / "12min" from the finished workout's elapsed time.
+    // Workout.elapsed() already subtracts accumulatedPause; for a completed
+    // workout the `asOf:` default is irrelevant.
+    private var durationText: String {
+        let totalMinutes = max(0, Int(workout.elapsed()) / 60)
+        let h = totalMinutes / 60
+        let m = totalMinutes % 60
+
+        switch (h, m) {
+        case (0, _): return "\(m)min"
+        case (_, 0): return "\(h)h"
+        default:     return "\(h)h \(m)min"
+        }
+    }
 }
 
 #Preview {
@@ -67,7 +98,7 @@ private struct WorkoutDetailContent: View {
     
     // 3. Create a Workout with an endDate (so it registers as completed) and insert it
     let workout = Workout(name: "Upper Body Power" )
-    workout.endDate = Date().addingTimeInterval(3600) // 1 hour workout duration
+    workout.endDate = Date().addingTimeInterval(4320) // 1h 12min workout duration
     context.insert(workout)
     
     // 4. Create ExerciseSets pointing at the workout/exercises with realistic values and insert them
@@ -92,7 +123,7 @@ private struct WorkoutDetailContent: View {
     
     // 5. Return the view target wrapped with a NavigationStack and the active container modifier
     return NavigationStack {
-        WorkoutDetailView(workoutID: workout.id)
+        HistoryDetailView(workoutID: workout.id)
     }
     .modelContainer(container)
 }
