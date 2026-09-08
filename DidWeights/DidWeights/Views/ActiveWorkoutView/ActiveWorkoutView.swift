@@ -75,23 +75,32 @@ struct ActiveWorkoutContent: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 24) {
+            List {
+                Section {
                     WorkoutHeaderView(workout: workout)
+                        .listRowSeparator(.hidden)
+                        .listRowBackground(Color.clear)
+                }
 
-                    ExerciseListView(
+                ForEach(workout.exerciseGroups) { group in
+                    ExerciseGroupView(
                         workout: workout,
+                        group: group,
                         focusedField: $focusedField,
                         errorMessage: $errorMessage
                     )
+                }
 
+                Section {
                     ActionButtonView(
                         workout: workout,
                         showAddExercise: $showAddExercise
                     )
+                    .listRowSeparator(.hidden)
+                    .listRowBackground(Color.clear)
                 }
-                .padding(.horizontal)
             }
+            .listStyle(.plain)
             .scrollBounceBehavior(.always)
             .navigationTitle(workout.name)
             .toolbar {
@@ -189,25 +198,9 @@ struct ActiveWorkoutContent: View {
 
 // MARK: - Exercise list
 
-struct ExerciseListView: View {
-    let workout: Workout
-    @FocusState.Binding var focusedField: ActiveWorkoutContent.Field?
-    @Binding var errorMessage: String?
-
-    var body: some View {
-        VStack(spacing: 20) {
-            ForEach(workout.exerciseGroups) { group in
-                ExerciseGroupView(
-                    workout: workout,
-                    group: group,
-                    focusedField: $focusedField,
-                    errorMessage: $errorMessage
-                )
-            }
-        }
-    }
-}
-
+/// One `List` section per exercise: the set rows (each swipe-to-delete),
+/// followed by an "Add Set" / "Delete Set" button row. Header carries the
+/// exercise name, the remove-exercise menu, and the column labels.
 struct ExerciseGroupView: View {
     let workout: Workout
     let group: ExerciseGroup
@@ -218,36 +211,17 @@ struct ExerciseGroupView: View {
     private var workouts: WorkoutRepository { WorkoutRepository(context: modelContext) }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                Text(group.exercise.name)
-                    .font(.headline)
-                Spacer()
-                Menu {
-                    Button(role: .destructive) {
-                        do {
-                            try workouts.removeExercise(group.exercise, from: workout)
-                        } catch {
-                            errorMessage = "Couldn't remove exercise: \(error.localizedDescription)"
-                        }
-                    } label: {
-                        Label("Remove Exercise", systemImage: "trash")
-                    }
-                } label: {
-                    Image(systemName: "ellipsis")
-                        .font(.system(size: 28))
-                        .foregroundStyle(ActivePalette.primaryButtonText)
-                        .frame(width: 40, height: 24)
-                        .background(ActivePalette.pillBackground)
-                        .clipShape(.capsule)
-                }
-            }
-
-            SetHeaderView()
-            Divider()
-
+        Section {
             ForEach(Array(group.sets.enumerated()), id: \.element.id) { index, set in
                 ExerciseSetRowView(set: set, index: index, focusedField: $focusedField)
+                    .listRowBackground(set.isCompleted ? Color.green.opacity(0.2) : Color.clear)
+                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                        Button(role: .destructive) {
+                            deleteSet(set)
+                        } label: {
+                            Label("Delete", systemImage: "trash")
+                        }
+                    }
             }
 
             HStack(spacing: 12) {
@@ -268,6 +242,7 @@ struct ExerciseGroupView: View {
                     .padding(.vertical, 8)
                     .background(Color.red.opacity(0.15))
                     .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .buttonStyle(.borderless)
                 }
 
                 Button {
@@ -287,7 +262,47 @@ struct ExerciseGroupView: View {
                 .padding(.vertical, 8)
                 .background(ActivePalette.primaryButtonBackground)
                 .clipShape(RoundedRectangle(cornerRadius: 8))
+                .buttonStyle(.borderless)
             }
+            .listRowSeparator(.hidden)
+            .listRowBackground(Color.clear)
+            .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 12, trailing: 16))
+        } header: {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Text(group.exercise.name)
+                        .font(.headline)
+                    Spacer()
+                    Menu {
+                        Button(role: .destructive) {
+                            do {
+                                try workouts.removeExercise(group.exercise, from: workout)
+                            } catch {
+                                errorMessage = "Couldn't remove exercise: \(error.localizedDescription)"
+                            }
+                        } label: {
+                            Label("Remove Exercise", systemImage: "trash")
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis")
+                            .font(.system(size: 28))
+                            .foregroundStyle(ActivePalette.primaryButtonText)
+                            .frame(width: 40, height: 24)
+                            .background(ActivePalette.pillBackground)
+                            .clipShape(.capsule)
+                    }
+                }
+
+                SetHeaderView()
+            }
+        }
+    }
+
+    private func deleteSet(_ set: ExerciseSet) {
+        do {
+            try workouts.removeSet(set)
+        } catch {
+            errorMessage = "Couldn't remove set: \(error.localizedDescription)"
         }
     }
 }
@@ -319,7 +334,6 @@ struct ExerciseSetRowView: View {
     let index: Int
     @Environment(\.modelContext) private var modelContext
     @FocusState.Binding var focusedField: ActiveWorkoutContent.Field?
-    @State private var errorMessage: String?
 
     private var workouts: WorkoutRepository { WorkoutRepository(context: modelContext) }
 
@@ -368,11 +382,7 @@ struct ExerciseSetRowView: View {
             Spacer()
 
             Button {
-                do {
-                    try workouts.toggleCompletion(of: set)
-                } catch {
-                    errorMessage = "This set needs reps entered before it can be completed."
-                }
+                try? workouts.toggleCompletion(of: set)
             } label: {
                 Image(systemName: set.isCompleted ? "checkmark.square.fill" : "square")
                     .font(.title2)
@@ -380,20 +390,7 @@ struct ExerciseSetRowView: View {
             }
             .frame(width: 24)
             .buttonStyle(.borderless)
-            // Disabled state uses the SAME isCompletable rule the repository
-            // enforces — one definition, read from two places, per the trap.
-            .disabled(!set.isCompleted && !set.isCompletable)
-            .alert("Cannot complete set", isPresented: Binding(
-                get: { errorMessage != nil },
-                set: { if !$0 { errorMessage = nil } }
-            )) {
-                Button("OK", role: .cancel) { errorMessage = nil }
-            } message: {
-                Text(errorMessage ?? "")
-            }
         }
-        .padding(.vertical, 4)
-        .background(set.isCompleted ? .green.opacity(0.2) : .clear)
     }
 }
 
@@ -449,6 +446,11 @@ struct ActionButtonView: View {
                     .background(ActivePalette.primaryButtonBackground)
                     .clipShape(.buttonBorder)
             }
+            // .borderless so this row's two buttons are hit-tested
+            // independently inside the List — otherwise every tap in the
+            // row activates the first button and "Cancel Workout" opens
+            // the Add Exercise sheet.
+            .buttonStyle(.borderless)
 
             Button(role: .destructive) {
                 showCancelAlert = true
@@ -459,19 +461,20 @@ struct ActionButtonView: View {
                     .padding(.vertical, 12)
                     .clipShape(.buttonBorder)
             }
-            .alert("Cancel Workout?", isPresented: $showCancelAlert) {
-                Button("Cancel Workout", role: .destructive) {
-                    do {
-                        try workouts.cancel(workout)
-                        dismiss()
-                    } catch {
-                        errorMessage = "Couldn't cancel this workout."
-                    }
+            .buttonStyle(.borderless)
+        }
+        .alert("Cancel Workout?", isPresented: $showCancelAlert) {
+            Button("Cancel Workout", role: .destructive) {
+                do {
+                    try workouts.cancel(workout)
+                    dismiss()
+                } catch {
+                    errorMessage = "Couldn't cancel this workout."
                 }
-                Button("Resume", role: .cancel) {}
-            } message: {
-                Text("Are you sure you want to cancel this workout? All progress will be lost.")
             }
+            Button("Resume", role: .cancel) {}
+        } message: {
+            Text("Are you sure you want to cancel this workout? All progress will be lost.")
         }
     }
 }

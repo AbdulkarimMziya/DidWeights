@@ -14,6 +14,5 @@ enum WorkoutRepositoryError: Error, Equatable {
     case workoutNotActive
     case alreadyPaused
     case notPaused
-    case setNotCompletable
     case exerciseNotInWorkout
 }
