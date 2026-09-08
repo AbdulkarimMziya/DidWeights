@@ -396,25 +396,21 @@ import Testing
         }
     }
 
-    @Test func togglingCompletionWithoutRepsThrows() throws {
-        // 1. Arrange: Start an empty workout session and insert a target exercise
+    @Test func togglingCompletionWithoutRepsNowCompletes() throws {
+        // A set no longer needs reps entered to be marked complete.
         let workout = try sut.startEmptyWorkout(named: "Push Day")
         let benchPress = Exercise(name: "Bench Press")
         context.insert(benchPress)
-        
-        // 2. Arrange: Add a new set to the workout (reps and weight are nil by default)
+
+        // reps and weight are nil by default
         let set = try sut.addSet(to: workout, exercise: benchPress)
         #expect(set.reps == nil)
         #expect(set.isCompleted == false)
-        
-        // 3. Act & Assert Part 1: Verify that toggling completion throws the correct error
-        #expect(throws: WorkoutRepositoryError.setNotCompletable) {
-            try sut.toggleCompletion(of: set)
-        }
-        
-        // 4. Act & Assert Part 2: Confirm the set state remains unchanged after the failure
-        #expect(set.isCompleted == false)
-        #expect(set.completedAt == nil)
+
+        try sut.toggleCompletion(of: set)
+
+        #expect(set.isCompleted == true)
+        #expect(set.completedAt != nil)
     }
     
     @Test func togglingCompletionTwiceRestoresOriginalState() throws {

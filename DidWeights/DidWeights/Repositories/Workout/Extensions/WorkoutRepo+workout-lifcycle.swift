@@ -97,26 +97,21 @@ extension WorkoutRepository {
         // 1. Write the values on every keystroke
         set.reps = reps
         set.weight = weight
-        
-        // 2. Enforce consistency: If it was completed but reps are now cleared or 0, un-complete it
+
+        // 2. Any edit to a completed set clears its completion — the
+        //    logged numbers changed, so it has to be re-checked.
         if set.isCompleted {
-            if reps == nil || reps! <= 0 {
-                set.isCompleted = false
-                set.completedAt = nil
-            }
+            set.isCompleted = false
+            set.completedAt = nil
         }
     }
-    
+
     func toggleCompletion(of set: ExerciseSet) throws {
+        // A set can be completed regardless of its reps/weight.
         if set.isCompleted {
-            // going from completed -> not completed: always allowed
             set.isCompleted = false
             set.completedAt = nil
         } else {
-            // going from not completed -> completed: needs valid reps
-            guard let reps = set.reps, reps > 0 else {
-                throw WorkoutRepositoryError.setNotCompletable
-            }
             set.isCompleted = true
             set.completedAt = .now
         }
