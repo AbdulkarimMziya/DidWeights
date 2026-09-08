@@ -92,7 +92,7 @@ struct HistoryView: View {
             }
             .navigationTitle("History")
             .navigationDestination(for: UUID.self) { workoutID in
-                WorkoutDetailView(workoutID: workoutID)
+                HistoryDetailView(workoutID: workoutID)
             }
         }
     }
