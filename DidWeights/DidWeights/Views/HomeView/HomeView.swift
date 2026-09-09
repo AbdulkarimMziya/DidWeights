@@ -28,6 +28,7 @@ struct HomeView: View {
     @Query(sort: \WorkoutPreset.name) private var savedPlans: [WorkoutPreset]
 
     @State private var presentWorkout = false
+    @State private var didAutoPresentWorkout = false
     @State private var presentCreatePlan = false
     @State private var selectedPlan: WorkoutPreset?
     @State private var planPendingEdit: WorkoutPreset?
@@ -161,6 +162,15 @@ struct HomeView: View {
             .background(HomePalette.pageBackground.ignoresSafeArea())
             .scrollBounceBehavior(.always)
             .navigationTitle("Start Workout")
+            .onAppear {
+                // Drop the user straight back into a session left in progress,
+                // but only the first time Home appears this launch — tab
+                // switches and manual dismissals fall back to "Resume Workout".
+                if !didAutoPresentWorkout && !activeWorkouts.isEmpty {
+                    didAutoPresentWorkout = true
+                    presentWorkout = true
+                }
+            }
             .sheet(isPresented: $presentWorkout) {
                 ActiveWorkoutView()
             }
