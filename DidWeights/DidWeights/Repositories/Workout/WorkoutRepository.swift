@@ -39,10 +39,11 @@ struct WorkoutRepository {
     }
     
     @discardableResult
-    func startEmptyWorkout(named name: String, at date: Date = .now) throws -> Workout {
+    func startEmptyWorkout(named name: String? = nil, at date: Date = .now) throws -> Workout {
         guard try self.activeWorkout() == nil else { throw WorkoutRepositoryError.workoutAlreadyActive }
         
-        let newWorkout = Workout(name: name, startDate: date)
+        let resolvedName = name ?? Workout.contextualName(for: date)
+        let newWorkout = Workout(name: resolvedName, startDate: date)
         context.insert(newWorkout)
         
         return newWorkout

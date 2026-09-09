@@ -194,7 +194,7 @@ struct HomeView: View {
     private func handleStartTapped() {
         if activeWorkouts.isEmpty {
             do {
-                try workouts.startEmptyWorkout(named: "Workout")
+                try workouts.startEmptyWorkout()
             } catch {
                 errorMessage = "Couldn't start a workout: \(error.localizedDescription)"
                 return
