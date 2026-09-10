@@ -40,15 +40,21 @@ struct AddExerciseSheet: View {
                     }
                     .disabled(newExerciseName.trimmingCharacters(in: .whitespaces).isEmpty)
                 }
+                .listRowBackground(Color.cardBg)
 
                 Section("Existing Exercises") {
                     ForEach(catalog) { exercise in
                         Button(exercise.name) {
                             addExisting(exercise)
                         }
+                        .foregroundStyle(Color.primaryHeadingTxt)
                     }
                 }
+                .listRowBackground(Color.cardBg)
             }
+            .scrollContentBackground(.hidden)
+            .background(Color.appBg)
+            .tint(Color.accentText)
             .navigationTitle("Add Exercise")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {

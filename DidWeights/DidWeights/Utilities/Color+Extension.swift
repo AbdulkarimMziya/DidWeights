@@ -22,5 +22,7 @@ extension Color {
     static let inputfieldBorder = Color("InputFieldBorder")
     static let primaryHeadingTxt = Color("PrimaryHeadingText")
     static let secondaryTxt = Color("SecondaryText")
-    
+
+    // Redesign tokens `tileBG`, `accentText`, `accentSoft`, `hairline` come from
+    // the generated asset symbols (colorsets of the same name in Assets.xcassets).
 }

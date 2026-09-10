@@ -47,12 +47,14 @@ struct CreatePlanView: View {
                 Section("Plan Name") {
                     TextField("e.g. Push Day", text: $planName)
                 }
+                .listRowBackground(Color.cardBg)
 
                 Section("Default Sets") {
                     // for the whole plan, replacing the old per-exercise
                     // stepper. A real, acknowledged feature regression.
                     Stepper("\(defaultSetCount) sets per exercise", value: $defaultSetCount, in: 1...10)
                 }
+                .listRowBackground(Color.cardBg)
 
                 Section("Exercises") {
                     ForEach($exercises) { $exercise in
@@ -64,7 +66,11 @@ struct CreatePlanView: View {
                         exercises.append(PlanExerciseDraft())
                     }
                 }
+                .listRowBackground(Color.cardBg)
             }
+            .scrollContentBackground(.hidden)
+            .background(Color.appBg)
+            .tint(Color.accentText)
             .navigationTitle(editingPlan == nil ?
                              planName.isEmpty ? "New Plan" : planName
                              : "Edit Plan"
