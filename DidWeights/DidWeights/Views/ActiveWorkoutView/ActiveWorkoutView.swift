@@ -24,17 +24,26 @@ struct ActiveWorkoutView: View {
     )
     private var activeWorkouts: [Workout]
 
+    // Once real content has been shown, a subsequent empty query result means
+    // the workout was just canceled or finished and dismiss() is already in
+    // flight — not a genuine error. Render a blank background instead of the
+    // "No Active Workout" error so it doesn't flash while the sheet slides
+    // off screen.
+    @State private var hasShownWorkout = false
+
     var body: some View {
-        switch activeWorkouts.count {
-        case 0:
+        if activeWorkouts.count == 1 {
+            ActiveWorkoutContent(workout: activeWorkouts[0])
+                .onAppear { hasShownWorkout = true }
+        } else if hasShownWorkout {
+            Color.appBg.ignoresSafeArea()
+        } else if activeWorkouts.isEmpty {
             ContentUnavailableView(
                 "No Active Workout",
                 systemImage: "exclamationmark.triangle",
                 description: Text("Something went wrong starting this session.")
             )
-        case 1:
-            ActiveWorkoutContent(workout: activeWorkouts[0])
-        default:
+        } else {
             ContentUnavailableView(
                 "Multiple Active Workouts Detected",
                 systemImage: "exclamationmark.triangle.fill",
