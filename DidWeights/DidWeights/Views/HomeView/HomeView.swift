@@ -133,19 +133,20 @@ struct HomeView: View {
             }
 
             LazyVGrid(columns: columns, spacing: 16) {
-                if savedPlans.isEmpty {
-                    AddPlanCard()
-                        .onTapGesture { presentCreatePlan = true }
-                } else {
-                    ForEach(savedPlans) { plan in
-                        WorkoutTemplateCard(plan: plan) {
-                            selectedPlan = plan
-                        }
-                        .onTapGesture {
-                            planPendingEdit = plan
-                        }
+                ForEach(savedPlans) { plan in
+                    WorkoutTemplateCard(plan: plan) {
+                        selectedPlan = plan
+                    }
+                    .onTapGesture {
+                        planPendingEdit = plan
                     }
                 }
+
+                // Always the last cell — a standing affordance to create a
+                // plan. With no saved plans it's the only cell, matching the
+                // old empty state.
+                AddPlanCard()
+                    .onTapGesture { presentCreatePlan = true }
             }
             .confirmationDialog(
                 selectedPlan?.name ?? "Plan",
@@ -226,18 +227,22 @@ struct HomeView: View {
 
 
 
+// Plan grid tiles are a touch wider than tall, so each takes less area than a
+// full square. WorkoutTemplateCard and AddPlanCard share this so rows line up.
+private let planCardAspectRatio: CGFloat = 1.15
+
 struct WorkoutTemplateCard: View {
     let plan: WorkoutPreset
     var onOptions: () -> Void
 
     var body: some View {
-        // Color.clear forced to a square takes the full grid-column width, so
-        // the card is a true 1:1 tile regardless of its content height.
+        // Color.clear forced to this ratio takes the full grid-column width, so
+        // the card footprint is column-width driven regardless of content height.
         Color.clear
-            .aspectRatio(1, contentMode: .fit)
+            .aspectRatio(planCardAspectRatio, contentMode: .fit)
             .overlay {
-                VStack(alignment: .leading, spacing: Spacing.md) {
-                    ExerciseThumbnail(muscleGroup: plan.orderedExercises.first?.muscleGroup)
+                VStack(alignment: .leading, spacing: 10) {
+                    ExerciseThumbnail(muscleGroup: plan.orderedExercises.first?.muscleGroup, size: 40)
 
                     Text(plan.name)
                         .font(.appHeadline)
@@ -264,7 +269,7 @@ struct WorkoutTemplateCard: View {
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
-                .padding()
+                .padding(13)
             }
             .appCard()
             .overlay(alignment: .topTrailing) {
@@ -284,13 +289,10 @@ struct WorkoutTemplateCard: View {
     }
 }
 
-// Shown in place of the plan grid when the user has no saved plans:
-// one square cell, same footprint as WorkoutTemplateCard, drawn as a dashed
-// outline in the accent colour.
 struct AddPlanCard: View {
     var body: some View {
         Color.clear
-            .aspectRatio(1, contentMode: .fit)
+            .aspectRatio(planCardAspectRatio, contentMode: .fit)
             .overlay {
                 Text("Tap to Add a Plan")
                     .font(.appHeadline)
