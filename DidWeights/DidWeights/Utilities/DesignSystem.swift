@@ -95,8 +95,8 @@ extension View {
 // inside a `List` row to be hit-tested independently.
 
 extension View {
-    /// Filled accent action. Dark: lime fill / near-black text. Light: dark-green
-    /// fill / white text. Resolves from the `PrimaryBtn*` colorsets.
+    /// Filled accent action — the app's green (matches the app icon) with white
+    /// text. Resolves from the `PrimaryBtn*` colorsets.
     func primaryActionLabel(compact: Bool = false) -> some View {
         self
             .font(.system(size: compact ? 15 : 17, weight: .bold))
@@ -106,7 +106,7 @@ extension View {
             .clipShape(RoundedRectangle(cornerRadius: compact ? 12 : Radius.button, style: .continuous))
     }
 
-    /// Tinted destructive action (Cancel Workout, Delete Set).
+    /// Tinted destructive action, filled pill (Delete Set).
     func destructiveActionLabel(compact: Bool = false) -> some View {
         self
             .font(.system(size: compact ? 15 : 17, weight: .bold))
@@ -114,5 +114,13 @@ extension View {
             .frame(maxWidth: .infinity, minHeight: compact ? 40 : 52)
             .background(Color.deleteBtnBg)
             .clipShape(RoundedRectangle(cornerRadius: compact ? 12 : Radius.button, style: .continuous))
+    }
+
+    /// Plain destructive action — system red text, no fill (Cancel Workout).
+    func plainDestructiveLabel() -> some View {
+        self
+            .font(.system(size: 17, weight: .semibold))
+            .foregroundStyle(Color.red)
+            .frame(maxWidth: .infinity, minHeight: 44)
     }
 }

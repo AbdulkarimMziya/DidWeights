@@ -44,8 +44,6 @@ struct ActiveWorkoutView: View {
     }
 }
 
-/// Content: takes one live Workout, every mutation goes through
-/// WorkoutRepository (and ExerciseRepository for catalog lookups).
 struct ActiveWorkoutContent: View {
     @Bindable var workout: Workout
     @Environment(\.dismiss) private var dismiss
@@ -453,7 +451,7 @@ struct ActionButtonView: View {
             Button(role: .destructive) {
                 showCancelAlert = true
             } label: {
-                Text("Cancel Workout").destructiveActionLabel()
+                Text("Cancel Workout").plainDestructiveLabel()
             }
             .buttonStyle(.borderless)
         }
