@@ -75,16 +75,18 @@ struct ActiveWorkoutContent: View {
     }
 
     var body: some View {
+        let exerciseGroups = workout.exerciseGroups
+
         NavigationStack {
             List {
                 Section {
-                    WorkoutHeaderView(workout: workout)
+                    WorkoutHeaderView(workout: workout, exerciseCount: exerciseGroups.count)
                         .listRowSeparator(.hidden)
                         .listRowBackground(Color.clear)
                         .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
                 }
 
-                ForEach(workout.exerciseGroups) { group in
+                ForEach(exerciseGroups) { group in
                     ExerciseGroupView(
                         workout: workout,
                         group: group,
@@ -401,6 +403,7 @@ struct ExerciseSetRowView: View {
 
 struct WorkoutHeaderView: View {
     let workout: Workout
+    let exerciseCount: Int
 
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.lg) {
@@ -416,7 +419,7 @@ struct WorkoutHeaderView: View {
             HStack(spacing: Spacing.md) {
                 StatTile(
                     systemImage: "dumbbell.fill",
-                    value: "\(workout.exerciseGroups.count)",
+                    value: "\(exerciseCount)",
                     label: "Exercises"
                 )
                 StatTile(
