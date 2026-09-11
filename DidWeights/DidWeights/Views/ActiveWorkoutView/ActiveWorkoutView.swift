@@ -8,12 +8,6 @@
 import SwiftData
 import SwiftUI
 
-private enum ActivePalette {
-    static let primaryButtonBackground = Color("PrimaryBtnBG")
-    static let primaryButtonText = Color("PrimaryBtnText")
-    static let pillBackground = Color("PillBackground")
-}
-
 enum FinishWorkoutAlert: Identifiable {
     case cancelEmptyWorkout
     case unfinishedSets
@@ -30,17 +24,26 @@ struct ActiveWorkoutView: View {
     )
     private var activeWorkouts: [Workout]
 
+    // Once real content has been shown, a subsequent empty query result means
+    // the workout was just canceled or finished and dismiss() is already in
+    // flight — not a genuine error. Render a blank background instead of the
+    // "No Active Workout" error so it doesn't flash while the sheet slides
+    // off screen.
+    @State private var hasShownWorkout = false
+
     var body: some View {
-        switch activeWorkouts.count {
-        case 0:
+        if activeWorkouts.count == 1 {
+            ActiveWorkoutContent(workout: activeWorkouts[0])
+                .onAppear { hasShownWorkout = true }
+        } else if hasShownWorkout {
+            Color.appBg.ignoresSafeArea()
+        } else if activeWorkouts.isEmpty {
             ContentUnavailableView(
                 "No Active Workout",
                 systemImage: "exclamationmark.triangle",
                 description: Text("Something went wrong starting this session.")
             )
-        case 1:
-            ActiveWorkoutContent(workout: activeWorkouts[0])
-        default:
+        } else {
             ContentUnavailableView(
                 "Multiple Active Workouts Detected",
                 systemImage: "exclamationmark.triangle.fill",
@@ -50,8 +53,6 @@ struct ActiveWorkoutView: View {
     }
 }
 
-/// Content: takes one live Workout, every mutation goes through
-/// WorkoutRepository (and ExerciseRepository for catalog lookups).
 struct ActiveWorkoutContent: View {
     @Bindable var workout: Workout
     @Environment(\.dismiss) private var dismiss
@@ -80,6 +81,7 @@ struct ActiveWorkoutContent: View {
                     WorkoutHeaderView(workout: workout)
                         .listRowSeparator(.hidden)
                         .listRowBackground(Color.clear)
+                        .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
                 }
 
                 ForEach(workout.exerciseGroups) { group in
@@ -101,6 +103,8 @@ struct ActiveWorkoutContent: View {
                 }
             }
             .listStyle(.plain)
+            .scrollContentBackground(.hidden)
+            .background(Color.appBg)
             .scrollBounceBehavior(.always)
             .navigationTitle(workout.name)
             .toolbar {
@@ -109,6 +113,7 @@ struct ActiveWorkoutContent: View {
                         handleFinishTapped()
                     }
                     .fontWeight(.bold)
+                    .tint(Color.accentText)
                 }
                 ToolbarItemGroup(placement: .keyboard) {
                     Spacer()
@@ -214,7 +219,7 @@ struct ExerciseGroupView: View {
         Section {
             ForEach(Array(group.sets.enumerated()), id: \.element.id) { index, set in
                 ExerciseSetRowView(set: set, index: index, focusedField: $focusedField)
-                    .listRowBackground(set.isCompleted ? Color.green.opacity(0.2) : Color.clear)
+                    .listRowBackground(set.isCompleted ? Color.accentSoft : Color.clear)
                     .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                         Button(role: .destructive) {
                             deleteSet(set)
@@ -224,7 +229,7 @@ struct ExerciseGroupView: View {
                     }
             }
 
-            HStack(spacing: 12) {
+            HStack(spacing: Spacing.md) {
                 if !group.sets.isEmpty {
                     Button(role: .destructive) {
                         do {
@@ -233,15 +238,9 @@ struct ExerciseGroupView: View {
                             errorMessage = "Couldn't remove set: \(error.localizedDescription)"
                         }
                     } label: {
-                        Spacer()
                         Label("Delete Set", systemImage: "trash")
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-                        Spacer()
+                            .destructiveActionLabel(compact: true)
                     }
-                    .padding(.vertical, 8)
-                    .background(Color.red.opacity(0.15))
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
                     .buttonStyle(.borderless)
                 }
 
@@ -252,26 +251,20 @@ struct ExerciseGroupView: View {
                         errorMessage = "Couldn't add set: \(error.localizedDescription)"
                     }
                 } label: {
-                    Spacer()
                     Label("Add Set", systemImage: "plus")
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                        .foregroundStyle(ActivePalette.primaryButtonText)
-                    Spacer()
+                        .primaryActionLabel(compact: true)
                 }
-                .padding(.vertical, 8)
-                .background(ActivePalette.primaryButtonBackground)
-                .clipShape(RoundedRectangle(cornerRadius: 8))
                 .buttonStyle(.borderless)
             }
             .listRowSeparator(.hidden)
             .listRowBackground(Color.clear)
             .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 12, trailing: 16))
         } header: {
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: Spacing.sm) {
                 HStack {
                     Text(group.exercise.name)
-                        .font(.headline)
+                        .font(.appHeadline)
+                        .foregroundStyle(Color.primaryHeadingTxt)
                     Spacer()
                     Menu {
                         Button(role: .destructive) {
@@ -285,11 +278,10 @@ struct ExerciseGroupView: View {
                         }
                     } label: {
                         Image(systemName: "ellipsis")
-                            .font(.system(size: 28))
-                            .foregroundStyle(ActivePalette.primaryButtonText)
-                            .frame(width: 40, height: 24)
-                            .background(ActivePalette.pillBackground)
-                            .clipShape(.capsule)
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundStyle(Color.accentText)
+                            .frame(width: 40, height: 26)
+                            .background(Color.accentSoft, in: .capsule)
                     }
                 }
 
@@ -309,23 +301,17 @@ struct ExerciseGroupView: View {
 
 struct SetHeaderView: View {
     var body: some View {
-        HStack {
-            Text("Set").frame(width: 35, alignment: .leading)
-            Spacer()
-            Text("Previous").frame(width: 70, alignment: .center)
-            Spacer()
-            Text("lbs").frame(width: 60)
-            Spacer()
-            Text("Reps").frame(width: 50, alignment: .center)
-            Spacer()
-            Image(systemName: "checkmark.square.fill")
-                .frame(width: 30, alignment: .trailing)
-                .foregroundStyle(.secondary)
+        HStack(spacing: 6) {
+            Text("SET").frame(width: SetColumn.index)
+            Text("PREVIOUS").frame(maxWidth: .infinity)
+            Text("LBS").frame(width: SetColumn.weight)
+            Text("REPS").frame(width: SetColumn.reps)
+            Image(systemName: "checkmark")
+                .frame(width: SetColumn.check)
         }
-        .padding(4)
-        .font(.subheadline)
-        .fontWeight(.semibold)
-        .foregroundStyle(.secondary)
+        .font(.system(size: 12, weight: .semibold))
+        .foregroundStyle(Color.secondaryTxt)
+        .padding(.vertical, 4)
     }
 }
 
@@ -338,59 +324,76 @@ struct ExerciseSetRowView: View {
     private var workouts: WorkoutRepository { WorkoutRepository(context: modelContext) }
 
     var body: some View {
-        HStack {
+        HStack(spacing: 6) {
             Text("\(index + 1)")
-                .font(.subheadline)
-                .fontWeight(.bold)
-                .frame(width: 35, alignment: .center)
-
-            Spacer()
+                .font(.system(size: 15, weight: .bold))
+                .foregroundStyle(Color.primaryHeadingTxt)
+                .frame(width: SetColumn.index)
 
             Text("—")
-                .frame(width: 70, alignment: .center)
-                .font(.subheadline)
-                .fontWeight(.semibold)
-                .foregroundStyle(.secondary)
-
-            Spacer()
+                .font(.appCaption)
+                .foregroundStyle(Color.secondaryTxt)
+                .frame(maxWidth: .infinity)
 
             // @Bindable gives a direct binding to the model - no manual
             TextField("0", value: $set.weight, format: .number)
                 .keyboardType(.decimalPad)
                 .focused($focusedField, equals: .weight(set.id))
                 .multilineTextAlignment(.center)
-                .frame(width: 55)
-                .padding(.vertical, 4)
-                .overlay(Capsule().stroke(.blue))
+                .font(.system(size: 15, weight: .semibold))
+                .frame(width: SetColumn.weight)
+                .padding(.vertical, 7)
+                .background(fieldFill(.weight(set.id)), in: RoundedRectangle(cornerRadius: 13, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 13, style: .continuous)
+                        .stroke(Color.inputfieldBorder, lineWidth: 1)
+                )
                 .onChange(of: set.weight) {
                     try? workouts.updateSet(set, reps: set.reps, weight: set.weight)
                 }
-
-            Spacer()
 
             TextField("0", value: $set.reps, format: .number)
                 .keyboardType(.numberPad)
                 .focused($focusedField, equals: .reps(set.id))
                 .multilineTextAlignment(.center)
-                .frame(width: 55)
-                .padding(.vertical, 4)
-                .overlay(Capsule().stroke(.blue))
+                .font(.system(size: 15, weight: .semibold))
+                .frame(width: SetColumn.reps)
+                .padding(.vertical, 7)
+                .background(fieldFill(.reps(set.id)), in: RoundedRectangle(cornerRadius: 13, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 13, style: .continuous)
+                        .stroke(Color.inputfieldBorder, lineWidth: 1)
+                )
                 .onChange(of: set.reps) {
                     try? workouts.updateSet(set, reps: set.reps, weight: set.weight)
                 }
 
-            Spacer()
-
             Button {
                 try? workouts.toggleCompletion(of: set)
             } label: {
-                Image(systemName: set.isCompleted ? "checkmark.square.fill" : "square")
-                    .font(.title2)
-                    .foregroundStyle(set.isCompleted ? .green : .gray)
+                ZStack {
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .fill(set.isCompleted ? Color.primaryBtn : Color.clear)
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .stroke(
+                            set.isCompleted ? Color.primaryBtn : Color.secondaryTxt.opacity(0.5),
+                            lineWidth: 1.5
+                        )
+                    if set.isCompleted {
+                        Image(systemName: "checkmark")
+                            .font(.system(size: 13, weight: .bold))
+                            .foregroundStyle(Color.primaryBtnTxt)
+                    }
+                }
+                .frame(width: 26, height: 26)
             }
-            .frame(width: 24)
+            .frame(width: SetColumn.check)
             .buttonStyle(.borderless)
         }
+    }
+
+    private func fieldFill(_ field: ActiveWorkoutContent.Field) -> Color {
+        focusedField == field ? Color.accentSoft : Color.clear
     }
 }
 
@@ -400,24 +403,32 @@ struct WorkoutHeaderView: View {
     let workout: Workout
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 12) {
-                Image(systemName: "calendar")
-                    .frame(width: 20)
-                    .foregroundColor(.blue)
-                Text(workout.startDate, style: .date)
-            }
-            HStack(spacing: 12) {
-                Image(systemName: "clock")
-                    .frame(width: 20)
-                    .foregroundColor(.green)
+        VStack(alignment: .leading, spacing: Spacing.lg) {
+            VStack(alignment: .leading, spacing: 2) {
                 WorkoutTimerView(workout: workout)
+                    .font(.appTimer)
+                    .foregroundStyle(Color.primaryHeadingTxt)
+                Text("Elapsed · \(workout.startDate.formatted(date: .abbreviated, time: .shortened))")
+                    .font(.appCaption)
+                    .foregroundStyle(Color.secondaryTxt)
+            }
+
+            HStack(spacing: Spacing.md) {
+                StatTile(
+                    systemImage: "dumbbell.fill",
+                    value: "\(workout.exerciseGroups.count)",
+                    label: "Exercises"
+                )
+                StatTile(
+                    systemImage: "repeat",
+                    value: "\(workout.totalReps)",
+                    label: "Reps"
+                )
             }
         }
-        .font(.subheadline)
-        .fontWeight(.semibold)
-        .foregroundStyle(.secondary)
         .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(18)
+        .appCard()
     }
 }
 
@@ -434,17 +445,11 @@ struct ActionButtonView: View {
     private var workouts: WorkoutRepository { WorkoutRepository(context: modelContext) }
 
     var body: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: Spacing.md) {
             Button {
                 showAddExercise = true
             } label: {
-                Text("Add Exercise")
-                    .font(.system(size: 20, weight: .bold))
-                    .foregroundStyle(ActivePalette.primaryButtonText)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
-                    .background(ActivePalette.primaryButtonBackground)
-                    .clipShape(.buttonBorder)
+                Text("Add Exercise").primaryActionLabel()
             }
             // .borderless so this row's two buttons are hit-tested
             // independently inside the List — otherwise every tap in the
@@ -455,11 +460,7 @@ struct ActionButtonView: View {
             Button(role: .destructive) {
                 showCancelAlert = true
             } label: {
-                Text("Cancel Workout")
-                    .font(.system(size: 20, weight: .bold))
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
-                    .clipShape(.buttonBorder)
+                Text("Cancel Workout").plainDestructiveLabel()
             }
             .buttonStyle(.borderless)
         }

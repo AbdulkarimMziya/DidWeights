@@ -8,16 +8,6 @@
 import SwiftData
 import SwiftUI
 
-private enum HomePalette {
-    static let pageBackground = Color("AppBackground")
-    static let cardBackground = Color("CardRowBG")
-    static let primaryButtonBackground = Color("PrimaryBtnBG")
-    static let primaryButtonText = Color("PrimaryBtnText")
-    static let pillBackground = Color("PillBackground")
-    static let headingText = Color("PrimaryHeadingText")
-    static let secondaryText = Color("SecondaryText")
-}
-
 struct HomeView: View {
     @Environment(\.modelContext) private var modelContext
 
@@ -46,120 +36,13 @@ struct HomeView: View {
     var body: some View {
         NavigationStack {
             ScrollView(.vertical) {
-                VStack(spacing: 24) {
-                    // Section 1: Quick Start
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Quick Start")
-                            .font(.title2.bold())
-                            .foregroundStyle(HomePalette.headingText)
-
-                        Button {
-                            handleStartTapped()
-                        } label: {
-                            Text(activeWorkouts.isEmpty ? "Start a Workout" : "Resume Workout")
-                                .font(.system(size: 18, weight: .semibold))
-                                .foregroundStyle(HomePalette.primaryButtonText)
-                                .padding(.vertical, 14)
-                                .frame(maxWidth: .infinity, alignment: .center)
-                                .background(HomePalette.primaryButtonBackground.gradient)
-                                .clipShape(RoundedRectangle(cornerRadius: 12))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .stroke(HomePalette.secondaryText.opacity(0.3), lineWidth: 1)
-                                )
-                        }
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.bottom)
-
-
-                    // Section 2: Workout Plans
-                    VStack(alignment: .leading, spacing: 12) {
-                        HStack(alignment: .center) {
-                            Text("Workout Plans")
-                                .font(.title2.bold())
-                                .foregroundStyle(HomePalette.headingText)
-
-                            Spacer()
-
-                            Button {
-                                presentCreatePlan = true
-                            } label: {
-                                Image(systemName: "plus")
-                                    .font(.system(size: 20, weight: .semibold))
-                                    .foregroundStyle(HomePalette.primaryButtonText)
-                                    .padding(10)
-                                    .background(HomePalette.primaryButtonBackground, in: .circle)
-                            }
-                        }
-
-                        if savedPlans.isEmpty {
-                            AddPlanCard()
-                                .onTapGesture { presentCreatePlan = true }
-                        } else {
-                            LazyVGrid(columns: columns, spacing: 16) {
-                                ForEach(savedPlans) { plan in
-                                    WorkoutTemplateCard(plan: plan) {
-                                        selectedPlan = plan
-                                    }
-                                    .onTapGesture {
-                                        planPendingEdit = plan
-                                    }
-                                }
-                            }
-                            .confirmationDialog(
-                                selectedPlan?.name ?? "Plan",
-                                isPresented: Binding(
-                                    get: { selectedPlan != nil },
-                                    set: { if !$0 { selectedPlan = nil } }
-                                ),
-                                titleVisibility: .visible
-                            ) {
-                                if let plan = selectedPlan {
-                                    Button("Start Workout") {
-                                        handleStartFromPlanTapped(plan)
-                                        selectedPlan = nil
-                                    }
-                                    Button("Delete Plan", role: .destructive) {
-                                        planPendingDelete = plan
-                                        selectedPlan = nil
-                                    }
-                                    Button("Cancel", role: .cancel) {
-                                        selectedPlan = nil
-                                    }
-                                }
-                            }
-                            .alert(
-                                "Delete \(planPendingDelete?.name ?? "Plan")?",
-                                isPresented: Binding(
-                                    get: { planPendingDelete != nil },
-                                    set: { if !$0 { planPendingDelete = nil } }
-                                )
-                            ) {
-                                Button("Delete", role: .destructive) {
-                                    if let plan = planPendingDelete {
-                                        do {
-                                            try presets.delete(plan)
-                                        } catch {
-                                            errorMessage = "Couldn't delete this plan: \(error.localizedDescription)"
-                                        }
-                                    }
-                                    planPendingDelete = nil
-                                }
-                                Button("Cancel", role: .cancel) {
-                                    planPendingDelete = nil
-                                }
-                            } message: {
-                                Text("This can't be undone.")
-                            }
-                        }
-                    }
-
+                VStack(spacing: Spacing.xl) {
+                    quickStartSection
+                    workoutPlansSection
                 }
                 .padding()
-
             }
-            .background(HomePalette.pageBackground.ignoresSafeArea())
+            .background(Color.appBg.ignoresSafeArea())
             .scrollBounceBehavior(.always)
             .navigationTitle("Start Workout")
             .onAppear {
@@ -187,6 +70,128 @@ struct HomeView: View {
                 Button("OK", role: .cancel) { errorMessage = nil }
             } message: {
                 Text(errorMessage ?? "")
+            }
+        }
+    }
+
+    // MARK: - Sections
+
+    private var quickStartSection: some View {
+        VStack(alignment: .leading, spacing: Spacing.md) {
+            Text("Quick Start")
+                .font(.appTitle)
+                .foregroundStyle(Color.primaryHeadingTxt)
+
+            Button {
+                handleStartTapped()
+            } label: {
+                HStack(spacing: Spacing.lg) {
+                    VStack(alignment: .leading, spacing: Spacing.xs) {
+                        Text(activeWorkouts.isEmpty ? "Start a Workout" : "Resume Workout")
+                            .font(.system(size: 20, weight: .bold, design: .rounded))
+                        Text(activeWorkouts.isEmpty ? "No active session" : "Workout in progress")
+                            .font(.appCaption)
+                            .opacity(0.75)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                    Image(systemName: "arrow.right")
+                        .font(.system(size: 20, weight: .semibold))
+                        .foregroundStyle(Color.primaryBtn)
+                        .frame(width: 52, height: 52)
+                        .background(Color.primaryBtnTxt, in: .circle)
+                }
+                .foregroundStyle(Color.primaryBtnTxt)
+                .padding(22)
+                .background(Color.primaryBtn)
+                .clipShape(RoundedRectangle(cornerRadius: Radius.hero, style: .continuous))
+            }
+            .buttonStyle(.plain)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.bottom)
+    }
+
+    private var workoutPlansSection: some View {
+        VStack(alignment: .leading, spacing: Spacing.md) {
+            HStack(alignment: .center) {
+                Text("Workout Plans")
+                    .font(.appTitle)
+                    .foregroundStyle(Color.primaryHeadingTxt)
+
+                Spacer()
+
+                Button {
+                    presentCreatePlan = true
+                } label: {
+                    Image(systemName: "plus")
+                        .font(.system(size: 20, weight: .semibold))
+                        .foregroundStyle(Color.primaryBtnTxt)
+                        .padding(10)
+                        .background(Color.primaryBtn, in: .circle)
+                }
+            }
+
+            LazyVGrid(columns: columns, spacing: 16) {
+                ForEach(savedPlans) { plan in
+                    WorkoutTemplateCard(plan: plan) {
+                        selectedPlan = plan
+                    }
+                    .onTapGesture {
+                        planPendingEdit = plan
+                    }
+                }
+
+                // Always the last cell — a standing affordance to create a
+                // plan. With no saved plans it's the only cell, matching the
+                // old empty state.
+                AddPlanCard()
+                    .onTapGesture { presentCreatePlan = true }
+            }
+            .confirmationDialog(
+                selectedPlan?.name ?? "Plan",
+                isPresented: Binding(
+                    get: { selectedPlan != nil },
+                    set: { if !$0 { selectedPlan = nil } }
+                ),
+                titleVisibility: .visible
+            ) {
+                if let plan = selectedPlan {
+                    Button("Start Workout") {
+                        handleStartFromPlanTapped(plan)
+                        selectedPlan = nil
+                    }
+                    Button("Delete Plan", role: .destructive) {
+                        planPendingDelete = plan
+                        selectedPlan = nil
+                    }
+                    Button("Cancel", role: .cancel) {
+                        selectedPlan = nil
+                    }
+                }
+            }
+            .alert(
+                "Delete \(planPendingDelete?.name ?? "Plan")?",
+                isPresented: Binding(
+                    get: { planPendingDelete != nil },
+                    set: { if !$0 { planPendingDelete = nil } }
+                )
+            ) {
+                Button("Delete", role: .destructive) {
+                    if let plan = planPendingDelete {
+                        do {
+                            try presets.delete(plan)
+                        } catch {
+                            errorMessage = "Couldn't delete this plan: \(error.localizedDescription)"
+                        }
+                    }
+                    planPendingDelete = nil
+                }
+                Button("Cancel", role: .cancel) {
+                    planPendingDelete = nil
+                }
+            } message: {
+                Text("This can't be undone.")
             }
         }
     }
@@ -222,71 +227,83 @@ struct HomeView: View {
 
 
 
+// Plan grid tiles are a touch wider than tall, so each takes less area than a
+// full square. WorkoutTemplateCard and AddPlanCard share this so rows line up.
+private let planCardAspectRatio: CGFloat = 1.15
+
 struct WorkoutTemplateCard: View {
     let plan: WorkoutPreset
     var onOptions: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text(plan.name)
-                .font(.headline)
-                .foregroundStyle(HomePalette.headingText)
-                .lineLimit(1)
+        // Color.clear forced to this ratio takes the full grid-column width, so
+        // the card footprint is column-width driven regardless of content height.
+        Color.clear
+            .aspectRatio(planCardAspectRatio, contentMode: .fit)
+            .overlay {
+                VStack(alignment: .leading, spacing: 10) {
+                    ExerciseThumbnail(muscleGroup: plan.orderedExercises.first?.muscleGroup, size: 40)
 
-            Spacer(minLength: 0)
+                    Text(plan.name)
+                        .font(.appHeadline)
+                        .foregroundStyle(Color.primaryHeadingTxt)
+                        .lineLimit(1)
 
-            VStack(alignment: .leading, spacing: 4) {
-                // No decode — a direct relationship count.
-                Text("\(plan.exercises.count) exercises")
-                    .font(.subheadline)
-                    .foregroundStyle(HomePalette.secondaryText)
+                    Spacer(minLength: 0)
 
-                Group {
-                    if let lastActive = plan.lastActive {
-                        Text("Done: \(lastActive.formatted(.relative(presentation: .named)))")
-                    } else {
-                        Text("Never completed")
+                    VStack(alignment: .leading, spacing: Spacing.xs) {
+                        // No decode — a direct relationship count.
+                        Text("\(plan.exercises.count) exercises")
+                            .font(.appCaption)
+                            .foregroundStyle(Color.secondaryTxt)
+
+                        Group {
+                            if let lastActive = plan.lastActive {
+                                Text("Done: \(lastActive.formatted(.relative(presentation: .named)))")
+                            } else {
+                                Text("Never completed")
+                            }
+                        }
+                        .font(.appMicro)
+                        .foregroundStyle(Color.secondaryTxt.opacity(0.85))
                     }
                 }
-                .font(.caption)
-                .foregroundStyle(HomePalette.secondaryText.opacity(0.85))
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+                .padding(13)
             }
-        }
-        .padding()
-        .frame(maxWidth: .infinity, minHeight: 110, alignment: .leading)
-        .background(HomePalette.cardBackground)
-        .cornerRadius(12)
-        .shadow(color: .black.opacity(0.25), radius: 5, x: 0, y: 2)
-        .overlay(alignment: .topTrailing) {
-            Button(action: onOptions) {
-                Image(systemName: "ellipsis")
-                    .font(.system(size: 14, weight: .bold))
-                    .foregroundStyle(HomePalette.primaryButtonText)
-                    .padding(8)
-                    .background(HomePalette.pillBackground, in: Capsule())
-                    .contentShape(Rectangle())
+            .appCard()
+            .overlay(alignment: .topTrailing) {
+                Button(action: onOptions) {
+                    Image(systemName: "ellipsis")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundStyle(Color.accentText)
+                        .padding(8)
+                        .background(Color.accentSoft, in: Capsule())
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Plan options")
+                .accessibilityHint("Start, delete, or view options for \(plan.name)")
+                .padding(6)
             }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Plan options")
-            .accessibilityHint("Start, delete, or view options for \(plan.name)")
-            .padding(6)
-        }
     }
 }
 
-// Shown in place of the plan grid when the user has no saved plans:
-// same footprint as WorkoutTemplateCard, drawn as a dashed outline.
 struct AddPlanCard: View {
     var body: some View {
-        Text("Tap to Add a Plan")
-            .font(.headline)
-            .foregroundStyle(HomePalette.secondaryText)
-            .frame(maxWidth: .infinity, minHeight: 110)
-            .padding()
+        Color.clear
+            .aspectRatio(planCardAspectRatio, contentMode: .fit)
+            .overlay {
+                Text("Tap to Add a Plan")
+                    .font(.appHeadline)
+                    .foregroundStyle(Color.accentText)
+                    .multilineTextAlignment(.center)
+                    .padding()
+            }
             .background(
-                RoundedRectangle(cornerRadius: 12)
+                RoundedRectangle(cornerRadius: Radius.card, style: .continuous)
                     .strokeBorder(
-                        HomePalette.secondaryText.opacity(0.5),
+                        Color.accentText,
                         style: StrokeStyle(lineWidth: 1.5, dash: [6])
                     )
             )

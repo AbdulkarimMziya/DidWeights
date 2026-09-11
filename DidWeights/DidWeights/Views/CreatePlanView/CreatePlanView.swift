@@ -8,12 +8,6 @@
 import SwiftData
 import SwiftUI
 
-struct PlanExerciseDraft: Identifiable {
-    let id = UUID()
-    var exercise: Exercise?
-    var name: String = ""
-}
-
 struct CreatePlanView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
@@ -22,23 +16,14 @@ struct CreatePlanView: View {
 
     @State private var planName: String = ""
     @State private var defaultSetCount: Int = 3
-    @State private var exercises: [PlanExerciseDraft] = []
+    @State private var planExercises: [Exercise] = []
+    @State private var showPicker = false
     @State private var errorMessage: String?
 
     private var presets: PresetRepository { PresetRepository(context: modelContext) }
-    private var catalog: ExerciseRepository { ExerciseRepository(context: modelContext) }
 
     init(editingPlan: WorkoutPreset? = nil) {
         self.editingPlan = editingPlan
-    }
-
-    // Drafts with an empty/whitespace-only name are still "in progress" —
-    // they shouldn't become real catalog Exercise rows just because the
-    // draft array isn't empty. Both the Save button and savePlan() read
-    // from this same filtered list, so they can't disagree about what
-    // counts as a real exercise.
-    private var validExercises: [PlanExerciseDraft] {
-        exercises.filter { !$0.name.trimmingCharacters(in: .whitespaces).isEmpty }
     }
 
     var body: some View {
@@ -47,24 +32,38 @@ struct CreatePlanView: View {
                 Section("Plan Name") {
                     TextField("e.g. Push Day", text: $planName)
                 }
+                .listRowBackground(Color.cardBg)
 
                 Section("Default Sets") {
-                    // for the whole plan, replacing the old per-exercise
-                    // stepper. A real, acknowledged feature regression.
                     Stepper("\(defaultSetCount) sets per exercise", value: $defaultSetCount, in: 1...10)
                 }
+                .listRowBackground(Color.cardBg)
 
                 Section("Exercises") {
-                    ForEach($exercises) { $exercise in
-                        TextField("Exercise name", text: $exercise.name)
+                    ForEach(planExercises) { exercise in
+                        HStack(spacing: Spacing.md) {
+                            ExerciseThumbnail(muscleGroup: exercise.muscleGroup, size: 34)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(exercise.name)
+                                    .font(.appHeadline)
+                                    .foregroundStyle(Color.primaryHeadingTxt)
+                                if let group = exercise.muscleGroup, !group.isEmpty {
+                                    Text(group)
+                                        .font(.appCaption)
+                                        .foregroundStyle(Color.secondaryTxt)
+                                }
+                            }
+                        }
                     }
-                    .onDelete { exercises.remove(atOffsets: $0) }
+                    .onDelete { planExercises.remove(atOffsets: $0) }
 
-                    Button("Add Exercise") {
-                        exercises.append(PlanExerciseDraft())
-                    }
+                    Button("Add Exercise") { showPicker = true }
                 }
+                .listRowBackground(Color.cardBg)
             }
+            .scrollContentBackground(.hidden)
+            .background(Color.appBg)
+            .tint(Color.accentText)
             .navigationTitle(editingPlan == nil ?
                              planName.isEmpty ? "New Plan" : planName
                              : "Edit Plan"
@@ -72,13 +71,20 @@ struct CreatePlanView: View {
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") { savePlan() }
-                        .disabled(planName.isEmpty || validExercises.isEmpty)
+                        .disabled(planName.isEmpty || planExercises.isEmpty)
                 }
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
                 }
             }
             .onAppear { loadExistingPlanIfNeeded() }
+            .sheet(isPresented: $showPicker) {
+                ExercisePickerView(showSetCount: false) { exercise, _ in
+                    if !planExercises.contains(where: { $0.id == exercise.id }) {
+                        planExercises.append(exercise)
+                    }
+                }
+            }
             .alert("Something went wrong", isPresented: Binding(
                 get: { errorMessage != nil },
                 set: { if !$0 { errorMessage = nil } }
@@ -91,39 +97,29 @@ struct CreatePlanView: View {
     }
 
     private func loadExistingPlanIfNeeded() {
-        guard let editingPlan, exercises.isEmpty else { return }
+        guard let editingPlan, planExercises.isEmpty else { return }
 
         planName = editingPlan.name
         defaultSetCount = editingPlan.defaultSetCount
 
-        // No decoding at all — orderedExercises already gives back live
-        // Exercise objects, correctly sequenced, directly from the schema.
-        exercises = editingPlan.orderedExercises.map { exercise in
-            PlanExerciseDraft(exercise: exercise, name: exercise.name)
-        }
+        // orderedExercises already gives back live Exercise objects, correctly
+        // sequenced, straight from the schema.
+        planExercises = editingPlan.orderedExercises
     }
 
     private func savePlan() {
         do {
-            // Resolve every draft's name to a real catalog Exercise now,
-            // at the single point resolution is allowed to happen
-            // skipping blank drafts, which are still "in progress" and
-            // shouldn't become real catalog entries.
-            let resolvedExercises = try validExercises.map { draft in
-                try catalog.findOrCreate(name: draft.name)
-            }
-
             if let editingPlan {
                 try presets.update(
                     editingPlan,
                     name: planName,
-                    exercises: resolvedExercises,
+                    exercises: planExercises,
                     defaultSetCount: defaultSetCount
                 )
             } else {
                 try presets.create(
                     name: planName,
-                    exercises: resolvedExercises,
+                    exercises: planExercises,
                     defaultSetCount: defaultSetCount
                 )
             }

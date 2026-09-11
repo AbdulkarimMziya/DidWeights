@@ -67,5 +67,11 @@ extension Workout {
             .reduce(0.0, +)
     }
 
+    /// Every rep entered across the session, completed or not — the value shown
+    /// in the active-workout header. Display-only, same spirit as `totalVolume`.
+    var totalReps: Int {
+        self.sets.compactMap { $0.reps }.reduce(0, +)
+    }
+
 
 }
