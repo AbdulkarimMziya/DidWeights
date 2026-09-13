@@ -13,8 +13,8 @@ extension WorkoutRepository {
     @discardableResult
     func addExercise(_ exercise: Exercise, to workout: Workout, setCount: Int) throws -> [ExerciseSet] {
         guard setCount > 0 else { return [] }
-        
-        let startingOrder = workout.orderedSets.count
+
+        let startingOrder = workout.sets.count
         
         var createdSets = [ExerciseSet]()
         
@@ -57,7 +57,8 @@ extension WorkoutRepository {
     
     @discardableResult
     func addSet(to workout: Workout, exercise: Exercise) throws -> ExerciseSet {
-        let startingOrder = workout.orderedSets.count
+        // Same reasoning as addExercise above — only the count is needed.
+        let startingOrder = workout.sets.count
         
         let newSet = ExerciseSet(order: startingOrder, workout: workout, exercise: exercise)
         context.insert(newSet)
