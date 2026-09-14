@@ -30,7 +30,7 @@ struct StatTile: View {
                 .foregroundStyle(Color.secondaryTxt)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(14)
+        .padding(16)
         .background(Color.tileBG)
         .clipShape(RoundedRectangle(cornerRadius: Radius.tile, style: .continuous))
     }

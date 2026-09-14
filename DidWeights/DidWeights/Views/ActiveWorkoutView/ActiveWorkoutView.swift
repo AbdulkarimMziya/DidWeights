@@ -271,7 +271,7 @@ struct ExerciseGroupView: View {
                         Image(systemName: "ellipsis")
                             .font(.system(size: 14, weight: .bold))
                             .foregroundStyle(Color.secondaryTxt)
-                            .frame(width: 40, height: 26)
+                            .frame(width: 40, height: 24)
                             .background(Color.secondaryTxt.opacity(0.12), in: .capsule)
                     }
                 }
@@ -332,8 +332,8 @@ struct ExerciseSetRowView: View {
                 .focused($focusedField, equals: .weight(set.id))
                 .multilineTextAlignment(.center)
                 .font(.system(size: 15, weight: .semibold))
-                .frame(width: SetColumn.weight, height: 26)
-                .background(fieldFill(.weight(set.id)), in: RoundedRectangle(cornerRadius: 13, style: .continuous))
+                .frame(width: SetColumn.weight, height: 24)
+                .background(fieldFill(.weight(set.id)), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                 .onChange(of: set.weight) {
                     try? workouts.updateSet(set, reps: set.reps, weight: set.weight)
                 }
@@ -343,8 +343,8 @@ struct ExerciseSetRowView: View {
                 .focused($focusedField, equals: .reps(set.id))
                 .multilineTextAlignment(.center)
                 .font(.system(size: 15, weight: .semibold))
-                .frame(width: SetColumn.reps, height: 26)
-                .background(fieldFill(.reps(set.id)), in: RoundedRectangle(cornerRadius: 13, style: .continuous))
+                .frame(width: SetColumn.reps, height: 24)
+                .background(fieldFill(.reps(set.id)), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                 .onChange(of: set.reps) {
                     try? workouts.updateSet(set, reps: set.reps, weight: set.weight)
                 }
@@ -366,7 +366,7 @@ struct ExerciseSetRowView: View {
                             .foregroundStyle(Color.primaryBtnTxt)
                     }
                 }
-                .frame(width: 26, height: 26)
+                .frame(width: 24, height: 24)
             }
             .frame(width: SetColumn.check)
             .buttonStyle(.borderless)
@@ -409,7 +409,7 @@ struct WorkoutHeaderView: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(18)
+        .padding(16)
         .appCard()
     }
 }
