@@ -108,6 +108,7 @@ struct ActiveWorkoutContent: View {
             .scrollContentBackground(.hidden)
             .background(Color.appBg)
             .scrollBounceBehavior(.always)
+            .onTapGesture { focusedField = nil }
             .navigationTitle(workout.name)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
@@ -148,7 +149,7 @@ struct ActiveWorkoutContent: View {
                     return Alert(
                         title: Text("Finish Workout?"),
                         message: Text("There are sets in this workout that haven't been marked as completed."),
-                        primaryButton: .default(Text("Finish Anyway"), action: {
+                        primaryButton: .destructive(Text("Finish Anyway"), action: {
                             performFinish()
                         }),
                         secondaryButton: .cancel(Text("Resume"))
@@ -228,24 +229,11 @@ struct ExerciseGroupView: View {
                         } label: {
                             Label("Delete", systemImage: "trash")
                         }
+                        .tint(Color.red)
                     }
             }
 
             HStack(spacing: Spacing.md) {
-                if !group.sets.isEmpty {
-                    Button(role: .destructive) {
-                        do {
-                            try workouts.removeLastSet(of: group.exercise, in: workout)
-                        } catch {
-                            errorMessage = "Couldn't remove set: \(error.localizedDescription)"
-                        }
-                    } label: {
-                        Label("Delete Set", systemImage: "trash")
-                            .destructiveActionLabel(compact: true)
-                    }
-                    .buttonStyle(.borderless)
-                }
-
                 Button {
                     do {
                         try workouts.addSet(to: workout, exercise: group.exercise)
@@ -278,12 +266,13 @@ struct ExerciseGroupView: View {
                         } label: {
                             Label("Remove Exercise", systemImage: "trash")
                         }
+                        .tint(Color.red)
                     } label: {
                         Image(systemName: "ellipsis")
                             .font(.system(size: 14, weight: .bold))
-                            .foregroundStyle(Color.accentText)
-                            .frame(width: 40, height: 26)
-                            .background(Color.accentSoft, in: .capsule)
+                            .foregroundStyle(Color.secondaryTxt)
+                            .frame(width: 40, height: 24)
+                            .background(Color.secondaryTxt.opacity(0.12), in: .capsule)
                     }
                 }
 
@@ -343,13 +332,8 @@ struct ExerciseSetRowView: View {
                 .focused($focusedField, equals: .weight(set.id))
                 .multilineTextAlignment(.center)
                 .font(.system(size: 15, weight: .semibold))
-                .frame(width: SetColumn.weight)
-                .padding(.vertical, 7)
-                .background(fieldFill(.weight(set.id)), in: RoundedRectangle(cornerRadius: 13, style: .continuous))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 13, style: .continuous)
-                        .stroke(Color.inputfieldBorder, lineWidth: 1)
-                )
+                .frame(width: SetColumn.weight, height: 24)
+                .background(fieldFill(.weight(set.id)), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                 .onChange(of: set.weight) {
                     try? workouts.updateSet(set, reps: set.reps, weight: set.weight)
                 }
@@ -359,13 +343,8 @@ struct ExerciseSetRowView: View {
                 .focused($focusedField, equals: .reps(set.id))
                 .multilineTextAlignment(.center)
                 .font(.system(size: 15, weight: .semibold))
-                .frame(width: SetColumn.reps)
-                .padding(.vertical, 7)
-                .background(fieldFill(.reps(set.id)), in: RoundedRectangle(cornerRadius: 13, style: .continuous))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 13, style: .continuous)
-                        .stroke(Color.inputfieldBorder, lineWidth: 1)
-                )
+                .frame(width: SetColumn.reps, height: 24)
+                .background(fieldFill(.reps(set.id)), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                 .onChange(of: set.reps) {
                     try? workouts.updateSet(set, reps: set.reps, weight: set.weight)
                 }
@@ -387,7 +366,7 @@ struct ExerciseSetRowView: View {
                             .foregroundStyle(Color.primaryBtnTxt)
                     }
                 }
-                .frame(width: 26, height: 26)
+                .frame(width: 24, height: 24)
             }
             .frame(width: SetColumn.check)
             .buttonStyle(.borderless)
@@ -430,7 +409,7 @@ struct WorkoutHeaderView: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(18)
+        .padding(16)
         .appCard()
     }
 }

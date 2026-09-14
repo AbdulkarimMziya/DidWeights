@@ -40,7 +40,7 @@ enum Spacing {
 }
 
 enum Radius {
-    static let card: CGFloat = 20
+    static let card: CGFloat = 16
     static let button: CGFloat = 16
     static let tile: CGFloat = 16
     static let hero: CGFloat = 28
@@ -50,10 +50,10 @@ enum Radius {
 /// `ExerciseSetRowView` both read these so the header sits exactly above its
 /// columns and every row lines up. "Previous" takes the remaining flexible space.
 enum SetColumn {
-    static let index: CGFloat = 34
+    static let index: CGFloat = 32
     static let weight: CGFloat = 64
-    static let reps: CGFloat = 52
-    static let check: CGFloat = 34
+    static let reps: CGFloat = 64
+    static let check: CGFloat = 32
 }
 
 // MARK: - Elevation
@@ -101,9 +101,9 @@ extension View {
         self
             .font(.system(size: compact ? 15 : 17, weight: .bold))
             .foregroundStyle(Color.primaryBtnTxt)
-            .frame(maxWidth: .infinity, minHeight: compact ? 40 : 52)
+            .frame(maxWidth: .infinity, minHeight: compact ? 40 : 56)
             .background(Color.primaryBtn)
-            .clipShape(RoundedRectangle(cornerRadius: compact ? 12 : Radius.button, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: compact ? 8 : Radius.button, style: .continuous))
     }
 
     /// Tinted destructive action, filled pill (Delete Set).
@@ -111,9 +111,9 @@ extension View {
         self
             .font(.system(size: compact ? 15 : 17, weight: .bold))
             .foregroundStyle(Color.deleteBtnTxt)
-            .frame(maxWidth: .infinity, minHeight: compact ? 40 : 52)
+            .frame(maxWidth: .infinity, minHeight: compact ? 40 : 56)
             .background(Color.deleteBtnBg)
-            .clipShape(RoundedRectangle(cornerRadius: compact ? 12 : Radius.button, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: compact ? 8 : Radius.button, style: .continuous))
     }
 
     /// Plain destructive action — system red text, no fill (Cancel Workout).
@@ -121,6 +121,6 @@ extension View {
         self
             .font(.system(size: 17, weight: .semibold))
             .foregroundStyle(Color.red)
-            .frame(maxWidth: .infinity, minHeight: 44)
+            .frame(maxWidth: .infinity, minHeight: 48)
     }
 }

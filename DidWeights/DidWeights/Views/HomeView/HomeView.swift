@@ -127,7 +127,7 @@ struct HomeView: View {
                     Image(systemName: "plus")
                         .font(.system(size: 20, weight: .semibold))
                         .foregroundStyle(Color.primaryBtnTxt)
-                        .padding(10)
+                        .padding(8)
                         .background(Color.primaryBtn, in: .circle)
                 }
             }
@@ -269,7 +269,7 @@ struct WorkoutTemplateCard: View {
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
-                .padding(13)
+                .padding(16)
             }
             .appCard()
             .overlay(alignment: .topTrailing) {
@@ -284,7 +284,7 @@ struct WorkoutTemplateCard: View {
                 .buttonStyle(.plain)
                 .accessibilityLabel("Plan options")
                 .accessibilityHint("Start, delete, or view options for \(plan.name)")
-                .padding(6)
+                .padding(8)
             }
     }
 }
@@ -300,10 +300,11 @@ struct AddPlanCard: View {
                     .multilineTextAlignment(.center)
                     .padding()
             }
-            .background(
+            .background(Color.cardBg, in: RoundedRectangle(cornerRadius: Radius.card, style: .continuous))
+            .overlay(
                 RoundedRectangle(cornerRadius: Radius.card, style: .continuous)
                     .strokeBorder(
-                        Color.accentText,
+                        Color.planCardBorder,
                         style: StrokeStyle(lineWidth: 1.5, dash: [6])
                     )
             )
