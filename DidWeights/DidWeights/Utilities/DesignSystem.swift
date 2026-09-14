@@ -52,7 +52,7 @@ enum Radius {
 enum SetColumn {
     static let index: CGFloat = 34
     static let weight: CGFloat = 64
-    static let reps: CGFloat = 52
+    static let reps: CGFloat = 64
     static let check: CGFloat = 34
 }
 
