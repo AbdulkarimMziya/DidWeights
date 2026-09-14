@@ -300,10 +300,11 @@ struct AddPlanCard: View {
                     .multilineTextAlignment(.center)
                     .padding()
             }
-            .background(
+            .background(Color.cardBg, in: RoundedRectangle(cornerRadius: Radius.card, style: .continuous))
+            .overlay(
                 RoundedRectangle(cornerRadius: Radius.card, style: .continuous)
                     .strokeBorder(
-                        Color.accentText,
+                        Color.planCardBorder,
                         style: StrokeStyle(lineWidth: 1.5, dash: [6])
                     )
             )
