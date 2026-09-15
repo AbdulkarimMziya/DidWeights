@@ -15,7 +15,14 @@ struct CreatePlanView: View {
     let editingPlan: WorkoutPreset?
 
     @State private var planName: String = ""
-    @State private var defaultSetCount: Int = 3
+    // Not user-editable — the "Default Sets" control was removed in favor of
+    // exercises always starting with 1 set (matching the active-workout
+    // flow). Still passed through to PresetRepository since WorkoutPreset's
+    // defaultSetCount is a required, non-optional model field that
+    // WorkoutRepository.startWorkout(from:) depends on. Editing an existing
+    // plan preserves its current value (see loadExistingPlanIfNeeded)
+    // instead of silently resetting it to 1.
+    @State private var defaultSetCount: Int = 1
     @State private var planExercises: [Exercise] = []
     @State private var showPicker = false
     @State private var errorMessage: String?
@@ -31,11 +38,6 @@ struct CreatePlanView: View {
             Form {
                 Section("Plan Name") {
                     TextField("e.g. Push Day", text: $planName)
-                }
-                .listRowBackground(Color.cardBg)
-
-                Section("Default Sets") {
-                    Stepper("\(defaultSetCount) sets per exercise", value: $defaultSetCount, in: 1...10)
                 }
                 .listRowBackground(Color.cardBg)
 
@@ -57,7 +59,15 @@ struct CreatePlanView: View {
                     }
                     .onDelete { planExercises.remove(atOffsets: $0) }
 
-                    Button("Add Exercise") { showPicker = true }
+                    Button {
+                        showPicker = true
+                    } label: {
+                        Text("Add Exercise").primaryActionLabel()
+                    }
+                    .buttonStyle(.borderless)
+                    .listRowSeparator(.hidden)
+                    .listRowBackground(Color.clear)
+                    .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
                 }
                 .listRowBackground(Color.cardBg)
             }
@@ -75,11 +85,12 @@ struct CreatePlanView: View {
                 }
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
+                        .tint(Color.red)
                 }
             }
             .onAppear { loadExistingPlanIfNeeded() }
             .sheet(isPresented: $showPicker) {
-                ExercisePickerView(showSetCount: false) { exercise, _ in
+                ExercisePickerView { exercise in
                     if !planExercises.contains(where: { $0.id == exercise.id }) {
                         planExercises.append(exercise)
                     }

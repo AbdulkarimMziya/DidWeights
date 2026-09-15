@@ -18,9 +18,13 @@ struct AddExerciseSheet: View {
     private var workouts: WorkoutRepository { WorkoutRepository(context: modelContext) }
 
     var body: some View {
-        ExercisePickerView(showSetCount: true) { exercise, setCount in
+        ExercisePickerView { exercise in
             do {
-                try workouts.addExercise(exercise, to: workout, setCount: setCount)
+                // Every newly added exercise starts with a single set; more
+                // are added one at a time via the per-exercise "Add Set"
+                // pill. A future Settings screen could make this default
+                // configurable — swap this literal for that value then.
+                try workouts.addExercise(exercise, to: workout, setCount: 1)
                 dismiss()
             } catch {
                 errorMessage = "Couldn't add exercise: \(error.localizedDescription)"

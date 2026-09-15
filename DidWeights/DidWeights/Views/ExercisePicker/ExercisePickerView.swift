@@ -16,17 +16,15 @@ private enum PickerRoute: Hashable {
 }
 
 struct ExercisePickerView: View {
-    // Shows the "Sets to add" stepper (active-workout context only).
-    let showSetCount: Bool
-    // Called once with the chosen exercise and the current set count, then the caller is expected to dismiss.
-    let onPick: (Exercise, Int) -> Void
+    // Called once with the chosen exercise, then the caller is expected to dismiss.
+    let onPick: (Exercise) -> Void
 
     @Environment(\.dismiss) private var dismiss
     @Query(sort: \Exercise.name) private var catalog: [Exercise]
 
     @State private var path = NavigationPath()
     @State private var searchText = ""
-    @State private var setCount = 3
+    @FocusState private var searchFieldFocused: Bool
 
     private var filtered: [Exercise] {
         let q = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -37,25 +35,6 @@ struct ExercisePickerView: View {
     var body: some View {
         NavigationStack(path: $path) {
             List {
-                Section {
-                    Button {
-                        path.append(PickerRoute.create(nil))
-                    } label: {
-                        Label("Create New Exercise", systemImage: "plus")
-                            .primaryActionLabel()
-                    }
-                    .buttonStyle(.plain)
-                    .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
-                    .listRowBackground(Color.clear)
-                }
-
-                if showSetCount {
-                    Section {
-                        Stepper("Sets to add: \(setCount)", value: $setCount, in: 1...10)
-                    }
-                    .listRowBackground(Color.cardBg)
-                }
-
                 Section("Your Exercises") {
                     if filtered.isEmpty {
                         if searchText.trimmingCharacters(in: .whitespaces).isEmpty {
@@ -73,7 +52,7 @@ struct ExercisePickerView: View {
                     } else {
                         ForEach(filtered) { exercise in
                             Button {
-                                onPick(exercise, setCount)
+                                onPick(exercise)
                                 dismiss()
                             } label: {
                                 exerciseRow(exercise)
@@ -88,27 +67,68 @@ struct ExercisePickerView: View {
             .scrollContentBackground(.hidden)
             .background(Color.appBg)
             .tint(Color.accentText)
+            .onTapGesture { searchFieldFocused = false }
             .navigationTitle("Add Exercise")
-            .searchable(
-                text: $searchText,
-                placement: .navigationBarDrawer(displayMode: .always),
-                prompt: "Search exercises"
-            )
+            .safeAreaInset(edge: .bottom) {
+                searchBar
+            }
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
+                        .tint(Color.red)
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        path.append(PickerRoute.create(nil))
+                    } label: {
+                        Image(systemName: "plus")
+                    }
+                    .tint(Color.accentText)
+                    .accessibilityLabel("Create New Exercise")
                 }
             }
             .navigationDestination(for: PickerRoute.self) { route in
                 switch route {
                 case .create(let prefill):
                     CreateExerciseView(prefillName: prefill ?? "") { newExercise in
-                        onPick(newExercise, setCount)
+                        onPick(newExercise)
                         dismiss()
                     }
                 }
             }
         }
+    }
+
+    // Bottom-pinned search field — `.searchable` has no bottom placement,
+    // so this is a hand-built stand-in, styled with the same rounded-rect
+    // rhythm as the rest of the app.
+    private var searchBar: some View {
+        HStack(spacing: Spacing.sm) {
+            Image(systemName: "magnifyingglass")
+                .foregroundStyle(Color.secondaryTxt)
+            TextField("Search exercises", text: $searchText)
+                .focused($searchFieldFocused)
+                .foregroundStyle(Color.primaryHeadingTxt)
+            if !searchText.isEmpty {
+                Button {
+                    searchText = ""
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundStyle(Color.secondaryTxt)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, Spacing.md)
+        .frame(height: 44)
+        .background(Color.cardBg, in: RoundedRectangle(cornerRadius: Radius.button, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: Radius.button, style: .continuous)
+                .stroke(Color.inputfieldBorder, lineWidth: 1)
+        )
+        .padding(.horizontal, Spacing.lg)
+        .padding(.vertical, Spacing.sm)
+        .background(Color.appBg)
     }
 
     private func exerciseRow(_ exercise: Exercise) -> some View {
@@ -138,8 +158,8 @@ struct ExercisePickerView: View {
 
 #Preview {
     let container = try! ModelContainer.inMemory(seeded: true)
-    return ExercisePickerView(showSetCount: true) { exercise, count in
-        print("picked \(exercise.name) x\(count)")
+    return ExercisePickerView { exercise in
+        print("picked \(exercise.name)")
     }
     .modelContainer(container)
 }
