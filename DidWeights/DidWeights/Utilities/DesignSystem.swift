@@ -2,9 +2,9 @@
 //  DesignSystem.swift
 //  DidWeights
 //
-//  Shared visual language: type scale, spacing/radius rhythm, the set-table
-//  column grid, and the reusable button / card treatments. Presentation only —
-//  nothing here touches the model or repository layer.
+//  Shared visual language: type scale, corner radii, the set-table column grid,
+//  and the reusable button / card treatments. Presentation only — nothing here
+//  touches the model or repository layer. Spacing lives in `CGFloat+Spacing`.
 //
 
 import SwiftUI
@@ -28,16 +28,7 @@ extension Font {
     static let appTimer = Font.system(size: 46, weight: .bold, design: .rounded).monospacedDigit()
 }
 
-// MARK: - Rhythm
-
-enum Spacing {
-    static let xs: CGFloat = 4
-    static let sm: CGFloat = 8
-    static let md: CGFloat = 12
-    static let lg: CGFloat = 16
-    static let xl: CGFloat = 24
-    static let xxl: CGFloat = 32
-}
+// MARK: - Geometry
 
 enum Radius {
     static let card: CGFloat = 16

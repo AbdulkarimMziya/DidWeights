@@ -43,9 +43,9 @@ struct CreatePlanView: View {
 
                 Section("Exercises") {
                     ForEach(planExercises) { exercise in
-                        HStack(spacing: Spacing.md) {
+                        HStack(spacing: .oneAndAHalfX) {
                             ExerciseThumbnail(muscleGroup: exercise.muscleGroup, size: 34)
-                            VStack(alignment: .leading, spacing: 2) {
+                            VStack(alignment: .leading, spacing: .quarterX) {
                                 Text(exercise.name)
                                     .font(.appHeadline)
                                     .foregroundStyle(Color.primaryHeadingTxt)

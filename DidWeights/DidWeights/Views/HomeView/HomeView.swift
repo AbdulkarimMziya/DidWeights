@@ -29,14 +29,14 @@ struct HomeView: View {
     private var presets: PresetRepository { PresetRepository(context: modelContext) }
 
     let columns = [
-        GridItem(.flexible(), spacing: 16),
-        GridItem(.flexible(), spacing: 16)
+        GridItem(.flexible(), spacing: .twoX),
+        GridItem(.flexible(), spacing: .twoX)
     ]
 
     var body: some View {
         NavigationStack {
             ScrollView(.vertical) {
-                VStack(spacing: Spacing.xl) {
+                VStack(spacing: .threeX) {
                     quickStartSection
                     workoutPlansSection
                 }
@@ -77,7 +77,7 @@ struct HomeView: View {
     // MARK: - Sections
 
     private var quickStartSection: some View {
-        VStack(alignment: .leading, spacing: Spacing.md) {
+        VStack(alignment: .leading, spacing: .oneAndAHalfX) {
             Text("Quick Start")
                 .font(.appTitle)
                 .foregroundStyle(Color.primaryHeadingTxt)
@@ -85,8 +85,8 @@ struct HomeView: View {
             Button {
                 handleStartTapped()
             } label: {
-                HStack(spacing: Spacing.lg) {
-                    VStack(alignment: .leading, spacing: Spacing.xs) {
+                HStack(spacing: .twoX) {
+                    VStack(alignment: .leading, spacing: .halfX) {
                         Text(activeWorkouts.isEmpty ? "Start a Workout" : "Resume Workout")
                             .font(.system(size: 20, weight: .bold, design: .rounded))
                         Text(activeWorkouts.isEmpty ? "No active session" : "Workout in progress")
@@ -113,7 +113,7 @@ struct HomeView: View {
     }
 
     private var workoutPlansSection: some View {
-        VStack(alignment: .leading, spacing: Spacing.md) {
+        VStack(alignment: .leading, spacing: .oneAndAHalfX) {
             HStack(alignment: .center) {
                 Text("Workout Plans")
                     .font(.appTitle)
@@ -127,12 +127,12 @@ struct HomeView: View {
                     Image(systemName: "plus")
                         .font(.system(size: 20, weight: .semibold))
                         .foregroundStyle(Color.primaryBtnTxt)
-                        .padding(8)
+                        .padding(.oneX)
                         .background(Color.primaryBtn, in: .circle)
                 }
             }
 
-            LazyVGrid(columns: columns, spacing: 16) {
+            LazyVGrid(columns: columns, spacing: .twoX) {
                 ForEach(savedPlans) { plan in
                     WorkoutTemplateCard(plan: plan) {
                         selectedPlan = plan
@@ -251,7 +251,7 @@ struct WorkoutTemplateCard: View {
 
                     Spacer(minLength: 0)
 
-                    VStack(alignment: .leading, spacing: Spacing.xs) {
+                    VStack(alignment: .leading, spacing: .halfX) {
                         // No decode — a direct relationship count.
                         Text("\(plan.exercises.count) exercises")
                             .font(.appCaption)
@@ -269,7 +269,7 @@ struct WorkoutTemplateCard: View {
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
-                .padding(16)
+                .padding(.twoX)
             }
             .appCard()
             .overlay(alignment: .topTrailing) {
@@ -277,14 +277,14 @@ struct WorkoutTemplateCard: View {
                     Image(systemName: "ellipsis")
                         .font(.system(size: 14, weight: .bold))
                         .foregroundStyle(Color.accentText)
-                        .padding(8)
+                        .padding(.oneX)
                         .background(Color.accentSoft, in: Capsule())
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("Plan options")
                 .accessibilityHint("Start, delete, or view options for \(plan.name)")
-                .padding(8)
+                .padding(.oneX)
             }
     }
 }

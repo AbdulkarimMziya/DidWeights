@@ -129,7 +129,7 @@ private struct HistoryRow: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: Spacing.xs) {
+        VStack(alignment: .leading, spacing: .halfX) {
             Text(workout.name)
                 .font(.appHeadline)
                 .foregroundStyle(Color.primaryHeadingTxt)
@@ -138,7 +138,7 @@ private struct HistoryRow: View {
                 .foregroundStyle(Color.secondaryTxt)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(16)
+        .padding(.twoX)
         .appCard()
     }
 }
