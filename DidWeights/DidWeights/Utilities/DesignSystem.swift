@@ -24,6 +24,8 @@ extension Font {
     static let appCaption = Font.system(size: 13, weight: .regular)
     /// Micro labels (stat-tile units, timestamps).
     static let appMicro = Font.system(size: 11, weight: .medium)
+    /// Small uppercase monospaced eyebrow above a page headline.
+    static let appEyebrow = Font.system(size: 12, weight: .semibold, design: .monospaced)
     /// The elapsed-time readout on the active workout header.
     static let appTimer = Font.system(size: 46, weight: .bold, design: .rounded).monospacedDigit()
 }

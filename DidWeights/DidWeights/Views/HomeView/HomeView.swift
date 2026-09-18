@@ -8,6 +8,11 @@
 import SwiftData
 import SwiftUI
 
+@Observable
+class HomeViewModel {
+    
+}
+
 struct HomeView: View {
     @Environment(\.modelContext) private var modelContext
 
@@ -37,6 +42,7 @@ struct HomeView: View {
         NavigationStack {
             ScrollView(.vertical) {
                 VStack(spacing: .threeX) {
+                    PageHeader(isWorkoutActive: !activeWorkouts.isEmpty)
                     quickStartSection
                     workoutPlansSection
                 }
@@ -44,7 +50,7 @@ struct HomeView: View {
             }
             .background(Color.appBg.ignoresSafeArea())
             .scrollBounceBehavior(.always)
-            .navigationTitle("Start Workout")
+            .toolbar(.hidden, for: .navigationBar)
             .onAppear {
                 // Drop the user straight back into a session left in progress,
                 // but only the first time Home appears this launch — tab
@@ -225,6 +231,45 @@ struct HomeView: View {
     }
 }
 
+private struct PageHeader: View {
+    let isWorkoutActive: Bool
+
+    private static let initials = "AJ"
+
+    private var eyebrow: String {
+        isWorkoutActive ? "CURRENT SESSION ACTIVE" : "WELCOME BACK"
+    }
+
+    private var headline: String {
+        isWorkoutActive ? "Workout in Progress" : "Ready to Train?"
+    }
+
+    var body: some View {
+        HStack(alignment: .center, spacing: .twoX) {
+            VStack(alignment: .leading, spacing: .halfX) {
+                Text(eyebrow)
+                    .font(.appEyebrow)
+                    .tracking(0.8)
+                    .foregroundStyle(Color.secondaryTxt)
+
+                Text(headline)
+                    .font(.appDisplay)
+                    .foregroundStyle(Color.primaryHeadingTxt)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .accessibilityElement(children: .combine)
+
+            Text(Self.initials)
+                .font(.appHeadline)
+                .foregroundStyle(Color.primaryHeadingTxt)
+                .frame(width: 44, height: 44)
+                .background(Color.cardBg, in: .circle)
+                .overlay(Circle().strokeBorder(Color.primaryBtn, lineWidth: 2))
+                .accessibilityHidden(true)
+        }
+    }
+}
+
 
 
 // Plan grid tiles are a touch wider than tall, so each takes less area than a
@@ -318,4 +363,14 @@ struct AddPlanCard: View {
     let container = try! ModelContainer.inMemory(seeded: false)
     return HomeView()
         .modelContainer(container)
+}
+
+#Preview("Page header states") {
+    VStack(spacing: .threeX) {
+        PageHeader(isWorkoutActive: false)
+        PageHeader(isWorkoutActive: true)
+    }
+    .padding()
+    .frame(maxHeight: .infinity, alignment: .top)
+    .background(Color.appBg)
 }
