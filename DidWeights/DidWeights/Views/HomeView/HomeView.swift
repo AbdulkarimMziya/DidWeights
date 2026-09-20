@@ -81,7 +81,7 @@ struct HomeView: View {
     }
 
     // MARK: - Sections
-
+    
     private var quickStartSection: some View {
         VStack(alignment: .leading, spacing: .oneAndAHalfX) {
             Text("Quick Start")
@@ -94,8 +94,8 @@ struct HomeView: View {
                 HStack(spacing: .twoX) {
                     VStack(alignment: .leading, spacing: .halfX) {
                         Text(activeWorkouts.isEmpty ? "Start a Workout" : "Resume Workout")
-                            .font(.system(size: 20, weight: .bold, design: .rounded))
-                        Text(activeWorkouts.isEmpty ? "No active session" : "Workout in progress")
+                            .font(.appTitle)
+                        Text(activeWorkouts.isEmpty ? "Blank session • Log sets & exercises as you go" : "Workout in progress")
                             .font(.appCaption)
                             .opacity(0.75)
                     }
@@ -103,14 +103,15 @@ struct HomeView: View {
 
                     Image(systemName: "arrow.right")
                         .font(.system(size: 20, weight: .semibold))
-                        .foregroundStyle(Color.primaryBtn)
+                        .foregroundStyle(Color.primary)
                         .frame(width: 52, height: 52)
-                        .background(Color.primaryBtnTxt, in: .circle)
+                        .background(Color.appBackground, in: .circle)
+                        .environment(\.colorScheme, .light)
                 }
-                .foregroundStyle(Color.primaryBtnTxt)
                 .padding(22)
-                .background(Color.primaryBtn)
-                .clipShape(RoundedRectangle(cornerRadius: Radius.hero, style: .continuous))
+                .background(Color.primary)
+                .clipShape(RoundedRectangle(cornerRadius: .twoX, style: .continuous))
+                .environment(\.colorScheme, .dark)
             }
             .buttonStyle(.plain)
         }
@@ -121,9 +122,14 @@ struct HomeView: View {
     private var workoutPlansSection: some View {
         VStack(alignment: .leading, spacing: .oneAndAHalfX) {
             HStack(alignment: .center) {
-                Text("Workout Plans")
-                    .font(.appTitle)
-                    .foregroundStyle(Color.primaryHeadingTxt)
+                VStack(alignment: .leading, spacing: .halfX) {
+                    Text("Workout Plans")
+                        .font(.appTitle)
+                        .foregroundStyle(Color.primaryHeadingTxt)
+                    Text("Select routine or build a custom split")
+                        .font(.appCaption)
+                        .foregroundStyle(Color.metaText)
+                }
 
                 Spacer()
 
@@ -134,7 +140,8 @@ struct HomeView: View {
                         .font(.system(size: 20, weight: .semibold))
                         .foregroundStyle(Color.primaryBtnTxt)
                         .padding(.oneX)
-                        .background(Color.primaryBtn, in: .circle)
+                        .background(Color.primary, in: .circle)
+                        .environment(\.colorScheme, .light)
                 }
             }
 
@@ -231,6 +238,8 @@ struct HomeView: View {
     }
 }
 
+// MARK: - PageHeader
+
 private struct PageHeader: View {
     let isWorkoutActive: Bool
 
@@ -250,7 +259,7 @@ private struct PageHeader: View {
                 Text(eyebrow)
                     .font(.appEyebrow)
                     .tracking(0.8)
-                    .foregroundStyle(Color.secondaryTxt)
+                    .foregroundStyle(.metaText)
 
                 Text(headline)
                     .font(.appDisplay)
@@ -263,8 +272,8 @@ private struct PageHeader: View {
                 .font(.appHeadline)
                 .foregroundStyle(Color.primaryHeadingTxt)
                 .frame(width: 44, height: 44)
-                .background(Color.cardBg, in: .circle)
-                .overlay(Circle().strokeBorder(Color.primaryBtn, lineWidth: 2))
+                .background(Color.card, in: .circle)
+                .overlay(Circle().strokeBorder(Color.primary, lineWidth: 2))
                 .accessibilityHidden(true)
         }
     }
@@ -341,11 +350,11 @@ struct AddPlanCard: View {
             .overlay {
                 Text("Tap to Add a Plan")
                     .font(.appHeadline)
-                    .foregroundStyle(Color.accentText)
+                    .foregroundStyle(Color.primary)
                     .multilineTextAlignment(.center)
                     .padding()
             }
-            .background(Color.cardBg, in: RoundedRectangle(cornerRadius: Radius.card, style: .continuous))
+            .background(Color.card, in: RoundedRectangle(cornerRadius: Radius.card, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: Radius.card, style: .continuous)
                     .strokeBorder(

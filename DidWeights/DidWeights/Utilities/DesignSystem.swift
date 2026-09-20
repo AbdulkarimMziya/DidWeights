@@ -13,9 +13,9 @@ import SwiftUI
 
 extension Font {
     /// Large screen title (SF Pro Rounded).
-    static let appDisplay = Font.system(size: 34, weight: .bold, design: .rounded)
+    static let appDisplay = Font.system(size: 32, weight: .bold)
     /// Section heading.
-    static let appTitle = Font.system(size: 22, weight: .bold, design: .rounded)
+    static let appTitle = Font.system(size: 22, weight: .bold)
     /// Card / row title.
     static let appHeadline = Font.system(size: 17, weight: .semibold)
     /// Body copy.
@@ -27,7 +27,7 @@ extension Font {
     /// Small uppercase monospaced eyebrow above a page headline.
     static let appEyebrow = Font.system(size: 12, weight: .semibold, design: .monospaced)
     /// The elapsed-time readout on the active workout header.
-    static let appTimer = Font.system(size: 46, weight: .bold, design: .rounded).monospacedDigit()
+    static let appTimer = Font.system(size: 46, weight: .bold).monospacedDigit()
 }
 
 // MARK: - Geometry
