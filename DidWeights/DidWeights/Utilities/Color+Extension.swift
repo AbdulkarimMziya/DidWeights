@@ -11,6 +11,7 @@ import SwiftUI
 extension Color {
     static let appBg = Color("AppBackground")
     static let cardBg = Color("CardRowBG")
+    static let primary = Color("Primary")
     static let primaryBtn = Color("PrimaryBtnBG")
     static let primaryBtnTxt = Color("PrimaryBtnText")
     static let pillBg = Color("PillBackground")

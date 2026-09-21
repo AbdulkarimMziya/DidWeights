@@ -16,11 +16,13 @@ struct SplashScreenView: View {
                 .transition(.opacity)
         } else {
             Image("AppIconSplash")
+                .renderingMode(.template)
                 .resizable()
                 .scaledToFit()
                 .frame(width: 140, height: 140)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(Color.appBg)
+                .foregroundStyle(Color.primary)
+                .background(Color.appBackground)
                 .transition(.opacity)
                 .onAppear {
                     DispatchQueue.main.asyncAfter(deadline: .now() + 2) {

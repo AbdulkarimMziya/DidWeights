@@ -2,9 +2,9 @@
 //  DesignSystem.swift
 //  DidWeights
 //
-//  Shared visual language: type scale, spacing/radius rhythm, the set-table
-//  column grid, and the reusable button / card treatments. Presentation only —
-//  nothing here touches the model or repository layer.
+//  Shared visual language: type scale, corner radii, the set-table column grid,
+//  and the reusable button / card treatments. Presentation only — nothing here
+//  touches the model or repository layer. Spacing lives in `CGFloat+Spacing`.
 //
 
 import SwiftUI
@@ -13,9 +13,9 @@ import SwiftUI
 
 extension Font {
     /// Large screen title (SF Pro Rounded).
-    static let appDisplay = Font.system(size: 34, weight: .bold, design: .rounded)
+    static let appDisplay = Font.system(size: 32, weight: .bold)
     /// Section heading.
-    static let appTitle = Font.system(size: 22, weight: .bold, design: .rounded)
+    static let appTitle = Font.system(size: 24, weight: .bold)
     /// Card / row title.
     static let appHeadline = Font.system(size: 17, weight: .semibold)
     /// Body copy.
@@ -24,20 +24,13 @@ extension Font {
     static let appCaption = Font.system(size: 13, weight: .regular)
     /// Micro labels (stat-tile units, timestamps).
     static let appMicro = Font.system(size: 11, weight: .medium)
+    /// Small uppercase monospaced eyebrow above a page headline.
+    static let appEyebrow = Font.system(size: 12, weight: .semibold, design: .monospaced)
     /// The elapsed-time readout on the active workout header.
-    static let appTimer = Font.system(size: 46, weight: .bold, design: .rounded).monospacedDigit()
+    static let appTimer = Font.system(size: 46, weight: .bold).monospacedDigit()
 }
 
-// MARK: - Rhythm
-
-enum Spacing {
-    static let xs: CGFloat = 4
-    static let sm: CGFloat = 8
-    static let md: CGFloat = 12
-    static let lg: CGFloat = 16
-    static let xl: CGFloat = 24
-    static let xxl: CGFloat = 32
-}
+// MARK: - Geometry
 
 enum Radius {
     static let card: CGFloat = 16

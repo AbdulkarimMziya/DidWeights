@@ -103,7 +103,7 @@ struct ExercisePickerView: View {
     // so this is a hand-built stand-in, styled with the same rounded-rect
     // rhythm as the rest of the app.
     private var searchBar: some View {
-        HStack(spacing: Spacing.sm) {
+        HStack(spacing: .oneX) {
             Image(systemName: "magnifyingglass")
                 .foregroundStyle(Color.secondaryTxt)
             TextField("Search exercises", text: $searchText)
@@ -119,23 +119,23 @@ struct ExercisePickerView: View {
                 .buttonStyle(.plain)
             }
         }
-        .padding(.horizontal, Spacing.md)
+        .padding(.horizontal, .oneAndAHalfX)
         .frame(height: 44)
         .background(Color.cardBg, in: RoundedRectangle(cornerRadius: Radius.button, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: Radius.button, style: .continuous)
                 .stroke(Color.inputfieldBorder, lineWidth: 1)
         )
-        .padding(.horizontal, Spacing.lg)
-        .padding(.vertical, Spacing.sm)
+        .padding(.horizontal, .twoX)
+        .padding(.vertical, .oneX)
         .background(Color.appBg)
     }
 
     private func exerciseRow(_ exercise: Exercise) -> some View {
-        HStack(spacing: Spacing.md) {
+        HStack(spacing: .oneAndAHalfX) {
             ExerciseThumbnail(muscleGroup: exercise.muscleGroup, size: 36)
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: .quarterX) {
                 Text(exercise.name)
                     .font(.appHeadline)
                     .foregroundStyle(Color.primaryHeadingTxt)

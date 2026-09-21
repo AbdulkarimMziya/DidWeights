@@ -56,6 +56,18 @@ extension Workout {
         let completedSets = self.sets.filter { $0.isCompleted == true}
         return completedSets.count
     }
+
+    var totalSetCount: Int {
+        self.sets.count
+    }
+
+    /// A 0...1 fraction rather than a value/total pair: `ProgressView` is
+    /// undefined at `total: 0`, and a session with no sets logged yet is a
+    /// state Home has to render.
+    var setProgress: Double {
+        guard totalSetCount > 0 else { return 0 }
+        return Double(completedSetCount) / Double(totalSetCount)
+    }
     
     var totalVolume: Double {
         self.sets

@@ -14,7 +14,7 @@ struct StatTile: View {
     let label: String
 
     var body: some View {
-        VStack(alignment: .leading, spacing: Spacing.xs) {
+        VStack(alignment: .leading, spacing: .halfX) {
             Image(systemName: systemImage)
                 .font(.system(size: 16, weight: .semibold))
                 .foregroundStyle(Color.accentText)
@@ -30,14 +30,14 @@ struct StatTile: View {
                 .foregroundStyle(Color.secondaryTxt)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(16)
+        .padding(.twoX)
         .background(Color.tileBG)
         .clipShape(RoundedRectangle(cornerRadius: Radius.tile, style: .continuous))
     }
 }
 
 #Preview {
-    HStack(spacing: Spacing.md) {
+    HStack(spacing: .oneAndAHalfX) {
         StatTile(systemImage: "clock", value: "52 min", label: "Duration")
         StatTile(systemImage: "list.bullet", value: "5", label: "Exercises")
         StatTile(systemImage: "repeat", value: "84", label: "Reps")

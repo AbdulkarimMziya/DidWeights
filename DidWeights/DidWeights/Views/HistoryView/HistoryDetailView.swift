@@ -35,7 +35,7 @@ private struct HistoryDetailContent: View {
     var body: some View {
         List {
             Section {
-                HStack(spacing: Spacing.md) {
+                HStack(spacing: .oneAndAHalfX) {
                     StatTile(systemImage: "clock", value: durationText, label: "Duration")
                     StatTile(systemImage: "list.bullet", value: "\(workout.exerciseGroups.count)", label: "Exercises")
                     StatTile(systemImage: "checkmark.circle", value: "\(workout.sets.count)", label: "Sets")

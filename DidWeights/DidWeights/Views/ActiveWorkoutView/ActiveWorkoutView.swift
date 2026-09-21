@@ -233,7 +233,7 @@ struct ExerciseGroupView: View {
                     }
             }
 
-            HStack(spacing: Spacing.md) {
+            HStack(spacing: .oneAndAHalfX) {
                 Button {
                     do {
                         try workouts.addSet(to: workout, exercise: group.exercise)
@@ -250,7 +250,7 @@ struct ExerciseGroupView: View {
             .listRowBackground(Color.clear)
             .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 12, trailing: 16))
         } header: {
-            VStack(alignment: .leading, spacing: Spacing.sm) {
+            VStack(alignment: .leading, spacing: .oneX) {
                 HStack {
                     Text(group.exercise.name)
                         .font(.appHeadline)
@@ -385,8 +385,8 @@ struct WorkoutHeaderView: View {
     let exerciseCount: Int
 
     var body: some View {
-        VStack(alignment: .leading, spacing: Spacing.lg) {
-            VStack(alignment: .leading, spacing: 2) {
+        VStack(alignment: .leading, spacing: .twoX) {
+            VStack(alignment: .leading, spacing: .quarterX) {
                 WorkoutTimerView(workout: workout)
                     .font(.appTimer)
                     .foregroundStyle(Color.primaryHeadingTxt)
@@ -395,7 +395,7 @@ struct WorkoutHeaderView: View {
                     .foregroundStyle(Color.secondaryTxt)
             }
 
-            HStack(spacing: Spacing.md) {
+            HStack(spacing: .oneAndAHalfX) {
                 StatTile(
                     systemImage: "dumbbell.fill",
                     value: "\(exerciseCount)",
@@ -409,7 +409,7 @@ struct WorkoutHeaderView: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(16)
+        .padding(.twoX)
         .appCard()
     }
 }
@@ -427,7 +427,7 @@ struct ActionButtonView: View {
     private var workouts: WorkoutRepository { WorkoutRepository(context: modelContext) }
 
     var body: some View {
-        VStack(spacing: Spacing.md) {
+        VStack(spacing: .oneAndAHalfX) {
             Button {
                 showAddExercise = true
             } label: {

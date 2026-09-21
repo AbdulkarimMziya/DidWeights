@@ -8,6 +8,11 @@
 import SwiftData
 import SwiftUI
 
+@Observable
+class HomeViewModel {
+    
+}
+
 struct HomeView: View {
     @Environment(\.modelContext) private var modelContext
 
@@ -29,22 +34,23 @@ struct HomeView: View {
     private var presets: PresetRepository { PresetRepository(context: modelContext) }
 
     let columns = [
-        GridItem(.flexible(), spacing: 16),
-        GridItem(.flexible(), spacing: 16)
+        GridItem(.flexible(), spacing: .twoX),
+        GridItem(.flexible(), spacing: .twoX)
     ]
 
     var body: some View {
         NavigationStack {
             ScrollView(.vertical) {
-                VStack(spacing: Spacing.xl) {
-                    quickStartSection
+                VStack(spacing: .threeX) {
+                    PageHeader(isWorkoutActive: !activeWorkouts.isEmpty)
+                    QuickStartSection(workout: activeWorkouts.first, onStart: handleStartTapped)
                     workoutPlansSection
                 }
                 .padding()
             }
             .background(Color.appBg.ignoresSafeArea())
             .scrollBounceBehavior(.always)
-            .navigationTitle("Start Workout")
+            .toolbar(.hidden, for: .navigationBar)
             .onAppear {
                 // Drop the user straight back into a session left in progress,
                 // but only the first time Home appears this launch — tab
@@ -76,48 +82,17 @@ struct HomeView: View {
 
     // MARK: - Sections
 
-    private var quickStartSection: some View {
-        VStack(alignment: .leading, spacing: Spacing.md) {
-            Text("Quick Start")
-                .font(.appTitle)
-                .foregroundStyle(Color.primaryHeadingTxt)
-
-            Button {
-                handleStartTapped()
-            } label: {
-                HStack(spacing: Spacing.lg) {
-                    VStack(alignment: .leading, spacing: Spacing.xs) {
-                        Text(activeWorkouts.isEmpty ? "Start a Workout" : "Resume Workout")
-                            .font(.system(size: 20, weight: .bold, design: .rounded))
-                        Text(activeWorkouts.isEmpty ? "No active session" : "Workout in progress")
-                            .font(.appCaption)
-                            .opacity(0.75)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-
-                    Image(systemName: "arrow.right")
-                        .font(.system(size: 20, weight: .semibold))
-                        .foregroundStyle(Color.primaryBtn)
-                        .frame(width: 52, height: 52)
-                        .background(Color.primaryBtnTxt, in: .circle)
-                }
-                .foregroundStyle(Color.primaryBtnTxt)
-                .padding(22)
-                .background(Color.primaryBtn)
-                .clipShape(RoundedRectangle(cornerRadius: Radius.hero, style: .continuous))
-            }
-            .buttonStyle(.plain)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.bottom)
-    }
-
     private var workoutPlansSection: some View {
-        VStack(alignment: .leading, spacing: Spacing.md) {
+        VStack(alignment: .leading, spacing: .oneAndAHalfX) {
             HStack(alignment: .center) {
-                Text("Workout Plans")
-                    .font(.appTitle)
-                    .foregroundStyle(Color.primaryHeadingTxt)
+                VStack(alignment: .leading, spacing: .halfX) {
+                    Text("Workout Plans")
+                        .font(.appTitle)
+                        .foregroundStyle(Color.primaryHeadingTxt)
+                    Text("Select routine or build a custom split")
+                        .font(.appCaption)
+                        .foregroundStyle(Color.metaText)
+                }
 
                 Spacer()
 
@@ -127,12 +102,13 @@ struct HomeView: View {
                     Image(systemName: "plus")
                         .font(.system(size: 20, weight: .semibold))
                         .foregroundStyle(Color.primaryBtnTxt)
-                        .padding(8)
-                        .background(Color.primaryBtn, in: .circle)
+                        .padding(.oneX)
+                        .background(Color.primary, in: .circle)
+                        .environment(\.colorScheme, .light)
                 }
             }
 
-            LazyVGrid(columns: columns, spacing: 16) {
+            LazyVGrid(columns: columns, spacing: .twoX) {
                 ForEach(savedPlans) { plan in
                     WorkoutTemplateCard(plan: plan) {
                         selectedPlan = plan
@@ -225,6 +201,190 @@ struct HomeView: View {
     }
 }
 
+// MARK: - QuickStartSection
+
+private struct QuickStartSection: View {
+    let workout: Workout?
+    var onStart: () -> Void
+
+    private var isActive: Bool { workout != nil }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: .oneAndAHalfX) {
+            Text("Quick Start")
+                .font(.appTitle)
+                .foregroundStyle(Color.primaryHeadingTxt)
+
+            Button(action: onStart) {
+                VStack(alignment: .leading, spacing: .oneAndAHalfX) {
+                    HStack {
+                        Pill {
+                            if let _ = workout {
+                                HStack(spacing: .halfX) {
+                                    Circle()
+                                        .frame(width: .oneX)
+                                        .foregroundColor(Color.checkmarkBoxBG)
+                                    Text("In progress")
+                                }
+                            } else {
+                                Text("⚡️ Ready to go")
+                            }
+                        }
+                        Spacer(minLength: 0)
+                        if let workout {
+                            QuickStartTimerPill(workout: workout)
+                        }
+                    }
+                    HStack(spacing: .fourX) {
+                        VStack(alignment: .leading, spacing: .halfX) {
+                            Text(isActive ? "Resume Workout" : "Start a Workout")
+                                .font(.appTitle.weight(.heavy))
+                            Text(isActive ? "Workout in progress" : "Blank session • Log sets & exercises as you go")
+                                .font(.appCaption)
+                                .opacity(0.75)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+
+                        Image(systemName: "arrow.right")
+                            .font(.system(size: 24, weight: .semibold))
+                            .foregroundStyle(Color.primary)
+                            .frame(width: .sevenX, height: .sevenX)
+                            .background(Color.appBackground, in: .circle)
+                            .environment(\.colorScheme, .light)
+                    }
+
+                    if let workout {
+                        Spacer()
+                        Divider()
+                            .background(Color.white)
+                        VStack(alignment: .leading) {
+                            Text("Progress: \(workout.completedSetCount) of \(workout.totalSetCount) Sets")
+                                .font(.appCaption.bold())
+                            ProgressBar(fraction: workout.setProgress)
+                        }
+                    }
+                }
+                .padding(.twoAndAHalfX)
+                .background(Color.primary)
+                .clipShape(RoundedRectangle(cornerRadius: .twoX, style: .continuous))
+                .environment(\.colorScheme, .dark)
+            }
+            .buttonStyle(.plain)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.bottom)
+    }
+}
+
+// MARK: - Pill
+
+private struct Pill<Content: View>: View {
+    @ViewBuilder
+    let content: () -> Content
+    
+    var body: some View {
+        content()
+            .padding(.horizontal, .oneAndAHalfX)
+            .padding(.vertical, .halfX)
+            .background(Color.white.opacity(0.18), in: Capsule())
+            .opacity(0.7)
+            .font(.appCaption.weight(.semibold))
+    }
+}
+
+// MARK: - QuickStartTimerPill
+
+private struct QuickStartTimerPill: View {
+    let workout: Workout
+
+    var body: some View {
+        Pill {
+            HStack(spacing: .halfX) {
+                if workout.isPaused {
+                    Image(systemName: "pause.fill")
+                        .font(.system(size: 11, weight: .bold))
+                        .accessibilityLabel("Paused")
+                }
+            
+                WorkoutTimerView(workout: workout)
+            }
+        }
+    }
+}
+
+// MARK: - ProgressBar
+
+private struct ProgressBar: View {
+    
+    let fraction: Double
+    var height: CGFloat = 8
+
+    private var clampedFraction: Double {
+        min(max(fraction, 0), 1)
+    }
+
+    var body: some View {
+        ZStack(alignment: .leading) {
+            Capsule()
+                .fill(Color.black.opacity(0.25))
+
+            // A ZStack child can't ask how wide its container is, so the fill
+            // needs the proxy to size itself proportionally. scaleEffect would
+            // distort the capsule's end caps instead.
+            GeometryReader { proxy in
+                Capsule()
+                    .fill(Color.white)
+                    .frame(width: proxy.size.width * clampedFraction)
+            }
+        }
+        .frame(height: height)
+        // The adjacent label already states the same progress; announcing the
+        // bar too would read it twice.
+        .accessibilityHidden(true)
+    }
+}
+
+// MARK: - PageHeader
+
+private struct PageHeader: View {
+    let isWorkoutActive: Bool
+
+    private static let initials = "AJ"
+
+    private var eyebrow: String {
+        isWorkoutActive ? "CURRENT SESSION ACTIVE" : "WELCOME BACK"
+    }
+
+    private var headline: String {
+        isWorkoutActive ? "Workout in Progress" : "Ready to Train?"
+    }
+
+    var body: some View {
+        HStack(alignment: .center, spacing: .twoX) {
+            VStack(alignment: .leading, spacing: .halfX) {
+                Text(eyebrow)
+                    .font(.appEyebrow)
+                    .tracking(0.8)
+                    .foregroundStyle(.metaText)
+
+                Text(headline)
+                    .font(.appDisplay)
+                    .foregroundStyle(Color.primaryHeadingTxt)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .accessibilityElement(children: .combine)
+
+            Text(Self.initials)
+                .font(.appHeadline)
+                .foregroundStyle(Color.primaryHeadingTxt)
+                .frame(width: 44, height: 44)
+                .background(Color.card, in: .circle)
+                .overlay(Circle().strokeBorder(Color.primary, lineWidth: 2))
+                .accessibilityHidden(true)
+        }
+    }
+}
+
 
 
 // Plan grid tiles are a touch wider than tall, so each takes less area than a
@@ -251,7 +411,7 @@ struct WorkoutTemplateCard: View {
 
                     Spacer(minLength: 0)
 
-                    VStack(alignment: .leading, spacing: Spacing.xs) {
+                    VStack(alignment: .leading, spacing: .halfX) {
                         // No decode — a direct relationship count.
                         Text("\(plan.exercises.count) exercises")
                             .font(.appCaption)
@@ -269,7 +429,7 @@ struct WorkoutTemplateCard: View {
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
-                .padding(16)
+                .padding(.twoX)
             }
             .appCard()
             .overlay(alignment: .topTrailing) {
@@ -277,14 +437,14 @@ struct WorkoutTemplateCard: View {
                     Image(systemName: "ellipsis")
                         .font(.system(size: 14, weight: .bold))
                         .foregroundStyle(Color.accentText)
-                        .padding(8)
+                        .padding(.oneX)
                         .background(Color.accentSoft, in: Capsule())
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("Plan options")
                 .accessibilityHint("Start, delete, or view options for \(plan.name)")
-                .padding(8)
+                .padding(.oneX)
             }
     }
 }
@@ -296,11 +456,11 @@ struct AddPlanCard: View {
             .overlay {
                 Text("Tap to Add a Plan")
                     .font(.appHeadline)
-                    .foregroundStyle(Color.accentText)
+                    .foregroundStyle(Color.primary)
                     .multilineTextAlignment(.center)
                     .padding()
             }
-            .background(Color.cardBg, in: RoundedRectangle(cornerRadius: Radius.card, style: .continuous))
+            .background(Color.card, in: RoundedRectangle(cornerRadius: Radius.card, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: Radius.card, style: .continuous)
                     .strokeBorder(
@@ -318,4 +478,55 @@ struct AddPlanCard: View {
     let container = try! ModelContainer.inMemory(seeded: false)
     return HomeView()
         .modelContainer(container)
+}
+
+#Preview("Quick Start — idle") {
+    let container = try! ModelContainer.inMemory(seeded: false)
+
+    return QuickStartSection(workout: nil, onStart: {})
+        .padding()
+        .frame(maxHeight: .infinity, alignment: .top)
+        .background(Color.appBg)
+        .modelContainer(container)
+}
+
+#Preview("Quick Start — running") {
+    let container = try! ModelContainer.inMemory(seeded: false)
+    let workouts = WorkoutRepository(context: container.mainContext)
+    let workout = try! workouts.startEmptyWorkout(
+        named: "Push Day",
+        at: Date().addingTimeInterval(-1_725)
+    )
+
+    return QuickStartSection(workout: workout, onStart: {})
+        .padding()
+        .frame(maxHeight: .infinity, alignment: .top)
+        .background(Color.appBg)
+        .modelContainer(container)
+}
+
+#Preview("Quick Start — paused") {
+    let container = try! ModelContainer.inMemory(seeded: false)
+    let workouts = WorkoutRepository(context: container.mainContext)
+    let workout = try! workouts.startEmptyWorkout(
+        named: "Leg Day",
+        at: Date().addingTimeInterval(-4_400)
+    )
+    try! workouts.pause(workout, at: Date().addingTimeInterval(-600))
+
+    return QuickStartSection(workout: workout, onStart: {})
+        .padding()
+        .frame(maxHeight: .infinity, alignment: .top)
+        .background(Color.appBg)
+        .modelContainer(container)
+}
+
+#Preview("Page header states") {
+    VStack(spacing: .threeX) {
+        PageHeader(isWorkoutActive: false)
+        PageHeader(isWorkoutActive: true)
+    }
+    .padding()
+    .frame(maxHeight: .infinity, alignment: .top)
+    .background(Color.appBg)
 }
