@@ -533,4 +533,68 @@ import Testing
         #expect(finalOrderedSets[2].order == 2)
     }
 
+    @Test func setProgressIsZeroForAWorkoutWithNoSets() throws {
+        let workout = try sut.startEmptyWorkout(named: "Leg Day")
+
+        // The Home card renders this state, so the guard has to hold rather
+        // than producing a 0/0 NaN.
+        #expect(workout.totalSetCount == 0)
+        #expect(workout.completedSetCount == 0)
+        #expect(workout.setProgress == 0)
+    }
+
+    @Test func setProgressTracksCompletedOverTotalSets() throws {
+        let workout = try sut.startEmptyWorkout(named: "Leg Day")
+        let legPress = Exercise(name: "Leg Press")
+        context.insert(legPress)
+
+        let sets = try sut.addExercise(legPress, to: workout, setCount: 4)
+
+        #expect(workout.totalSetCount == 4)
+        #expect(workout.setProgress == 0)
+
+        try sut.updateSet(sets[0], reps: 10, weight: 100)
+        try sut.toggleCompletion(of: sets[0])
+
+        #expect(workout.completedSetCount == 1)
+        #expect(workout.setProgress == 0.25)
+
+        try sut.updateSet(sets[1], reps: 8, weight: 100)
+        try sut.toggleCompletion(of: sets[1])
+
+        #expect(workout.completedSetCount == 2)
+        #expect(workout.setProgress == 0.5)
+    }
+
+    @Test func setProgressReachesOneWhenEverySetIsCompleted() throws {
+        let workout = try sut.startEmptyWorkout(named: "Leg Day")
+        let legPress = Exercise(name: "Leg Press")
+        context.insert(legPress)
+
+        let sets = try sut.addExercise(legPress, to: workout, setCount: 3)
+
+        for set in sets {
+            try sut.updateSet(set, reps: 10, weight: 100)
+            try sut.toggleCompletion(of: set)
+        }
+
+        #expect(workout.setProgress == 1)
+    }
+
+    @Test func untouchedSetsStillCountTowardTheProgressDenominator() throws {
+        let workout = try sut.startEmptyWorkout(named: "Leg Day")
+        let legPress = Exercise(name: "Leg Press")
+        context.insert(legPress)
+
+        let sets = try sut.addExercise(legPress, to: workout, setCount: 2)
+
+        try sut.updateSet(sets[0], reps: 10, weight: 100)
+        try sut.toggleCompletion(of: sets[0])
+
+        // The second set has no reps or weight yet. finish() would prune it,
+        // but mid-session it's still outstanding work.
+        #expect(workout.totalSetCount == 2)
+        #expect(workout.setProgress == 0.5)
+    }
+
 }

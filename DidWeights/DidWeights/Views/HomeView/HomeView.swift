@@ -43,7 +43,7 @@ struct HomeView: View {
             ScrollView(.vertical) {
                 VStack(spacing: .threeX) {
                     PageHeader(isWorkoutActive: !activeWorkouts.isEmpty)
-                    quickStartSection
+                    QuickStartSection(workout: activeWorkouts.first, onStart: handleStartTapped)
                     workoutPlansSection
                 }
                 .padding()
@@ -81,55 +81,6 @@ struct HomeView: View {
     }
 
     // MARK: - Sections
-    
-    private var quickStartSection: some View {
-        VStack(alignment: .leading, spacing: .oneAndAHalfX) {
-            Text("Quick Start")
-                .font(.appTitle)
-                .foregroundStyle(Color.primaryHeadingTxt)
-
-            Button {
-                handleStartTapped()
-            } label: {
-                VStack(alignment: .leading, spacing: .oneAndAHalfX) {
-                    HStack(spacing: .fourX) {
-                        VStack(alignment: .leading, spacing: .halfX) {
-                            Text(activeWorkouts.isEmpty ? "Start a Workout" : "Resume Workout")
-                                .font(.appTitle.weight(.heavy))
-                            Text(activeWorkouts.isEmpty ? "Blank session • Log sets & exercises as you go" : "Workout in progress")
-                                .font(.appCaption)
-                                .opacity(0.75)
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        
-                        Image(systemName: "arrow.right")
-                            .font(.system(size: 24, weight: .semibold))
-                            .foregroundStyle(Color.primary)
-                            .frame(width: .sevenX, height: .sevenX)
-                            .background(Color.appBackground, in: .circle)
-                            .environment(\.colorScheme, .light)
-                    }
-                    Spacer()
-                    Divider()
-                        .background(Color.white)
-                    VStack(alignment: .leading) {
-                        Text("Progress: 4 of 5 Exercises")
-                            .font(.appCaption.bold())
-                        ProgressView(value: 4, total: 5)
-                            .progressViewStyle(.linear)
-                            .tint(.white)
-                    }
-                }
-                .padding(.threeX)
-                .background(Color.primary)
-                .clipShape(RoundedRectangle(cornerRadius: .twoX, style: .continuous))
-                .environment(\.colorScheme, .dark)
-            }
-            .buttonStyle(.plain)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.bottom)
-    }
 
     private var workoutPlansSection: some View {
         VStack(alignment: .leading, spacing: .oneAndAHalfX) {
@@ -247,6 +198,65 @@ struct HomeView: View {
         } catch {
             errorMessage = "Couldn't start this plan: \(error.localizedDescription)"
         }
+    }
+}
+
+// MARK: - QuickStartSection
+
+private struct QuickStartSection: View {
+    let workout: Workout?
+    var onStart: () -> Void
+
+    private var isActive: Bool { workout != nil }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: .oneAndAHalfX) {
+            Text("Quick Start")
+                .font(.appTitle)
+                .foregroundStyle(Color.primaryHeadingTxt)
+
+            Button(action: onStart) {
+                VStack(alignment: .leading, spacing: .oneAndAHalfX) {
+                    HStack(spacing: .fourX) {
+                        VStack(alignment: .leading, spacing: .halfX) {
+                            Text(isActive ? "Resume Workout" : "Start a Workout")
+                                .font(.appTitle.weight(.heavy))
+                            Text(isActive ? "Workout in progress" : "Blank session • Log sets & exercises as you go")
+                                .font(.appCaption)
+                                .opacity(0.75)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+
+                        Image(systemName: "arrow.right")
+                            .font(.system(size: 24, weight: .semibold))
+                            .foregroundStyle(Color.primary)
+                            .frame(width: .sevenX, height: .sevenX)
+                            .background(Color.appBackground, in: .circle)
+                            .environment(\.colorScheme, .light)
+                    }
+
+                    if let workout {
+                        Spacer()
+                        Divider()
+                            .background(Color.white)
+                        VStack(alignment: .leading) {
+                            Text("Progress: \(workout.completedSetCount) of \(workout.totalSetCount) Sets")
+                                .font(.appCaption.bold())
+                            ProgressView(value: workout.setProgress)
+                                .progressViewStyle(.linear)
+                                .tint(.white)
+                        }
+                    }
+                }
+                .padding(.threeX)
+                .background(Color.primary)
+                .clipShape(RoundedRectangle(cornerRadius: .twoX, style: .continuous))
+                .environment(\.colorScheme, .dark)
+            }
+            .buttonStyle(.plain)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.bottom)
     }
 }
 
