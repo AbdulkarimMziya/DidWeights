@@ -217,13 +217,24 @@ private struct QuickStartSection: View {
 
             Button(action: onStart) {
                 VStack(alignment: .leading, spacing: .oneAndAHalfX) {
-                    if let workout {
-                        HStack {
-                            Spacer(minLength: 0)
+                    HStack {
+                        Pill {
+                            if let _ = workout {
+                                HStack(spacing: .halfX) {
+                                    Circle()
+                                        .frame(width: .oneX)
+                                        .foregroundColor(Color.checkmarkBoxBG)
+                                    Text("In progress")
+                                }
+                            } else {
+                                Text("⚡️ Ready to go")
+                            }
+                        }
+                        Spacer(minLength: 0)
+                        if let workout {
                             QuickStartTimerPill(workout: workout)
                         }
                     }
-
                     HStack(spacing: .fourX) {
                         VStack(alignment: .leading, spacing: .halfX) {
                             Text(isActive ? "Resume Workout" : "Start a Workout")
@@ -253,7 +264,7 @@ private struct QuickStartSection: View {
                         }
                     }
                 }
-                .padding(.threeX)
+                .padding(.twoAndAHalfX)
                 .background(Color.primary)
                 .clipShape(RoundedRectangle(cornerRadius: .twoX, style: .continuous))
                 .environment(\.colorScheme, .dark)
@@ -265,26 +276,39 @@ private struct QuickStartSection: View {
     }
 }
 
+// MARK: - Pill
+
+private struct Pill<Content: View>: View {
+    @ViewBuilder
+    let content: () -> Content
+    
+    var body: some View {
+        content()
+            .padding(.horizontal, .oneAndAHalfX)
+            .padding(.vertical, .halfX)
+            .background(Color.white.opacity(0.18), in: Capsule())
+            .opacity(0.7)
+            .font(.appCaption.weight(.semibold))
+    }
+}
+
 // MARK: - QuickStartTimerPill
 
 private struct QuickStartTimerPill: View {
     let workout: Workout
 
     var body: some View {
-        HStack(spacing: .halfX) {
-            if workout.isPaused {
-                Image(systemName: "pause.fill")
-                    .font(.system(size: 11, weight: .bold))
-                    .accessibilityLabel("Paused")
+        Pill {
+            HStack(spacing: .halfX) {
+                if workout.isPaused {
+                    Image(systemName: "pause.fill")
+                        .font(.system(size: 11, weight: .bold))
+                        .accessibilityLabel("Paused")
+                }
+            
+                WorkoutTimerView(workout: workout)
             }
-
-            WorkoutTimerView(workout: workout)
-                .font(.appCaption.weight(.semibold))
         }
-        .padding(.horizontal, .oneAndAHalfX)
-        .padding(.vertical, .halfX)
-        .background(Color.white.opacity(0.18), in: Capsule())
-        .opacity(workout.isPaused ? 0.7 : 1)
     }
 }
 
