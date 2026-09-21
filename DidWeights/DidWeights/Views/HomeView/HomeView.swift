@@ -217,6 +217,13 @@ private struct QuickStartSection: View {
 
             Button(action: onStart) {
                 VStack(alignment: .leading, spacing: .oneAndAHalfX) {
+                    if let workout {
+                        HStack {
+                            Spacer(minLength: 0)
+                            QuickStartTimerPill(workout: workout)
+                        }
+                    }
+
                     HStack(spacing: .fourX) {
                         VStack(alignment: .leading, spacing: .halfX) {
                             Text(isActive ? "Resume Workout" : "Start a Workout")
@@ -242,9 +249,7 @@ private struct QuickStartSection: View {
                         VStack(alignment: .leading) {
                             Text("Progress: \(workout.completedSetCount) of \(workout.totalSetCount) Sets")
                                 .font(.appCaption.bold())
-                            ProgressView(value: workout.setProgress)
-                                .progressViewStyle(.linear)
-                                .tint(.white)
+                            ProgressBar(fraction: workout.setProgress)
                         }
                     }
                 }
@@ -257,6 +262,61 @@ private struct QuickStartSection: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.bottom)
+    }
+}
+
+// MARK: - QuickStartTimerPill
+
+private struct QuickStartTimerPill: View {
+    let workout: Workout
+
+    var body: some View {
+        HStack(spacing: .halfX) {
+            if workout.isPaused {
+                Image(systemName: "pause.fill")
+                    .font(.system(size: 11, weight: .bold))
+                    .accessibilityLabel("Paused")
+            }
+
+            WorkoutTimerView(workout: workout)
+                .font(.appCaption.weight(.semibold))
+        }
+        .padding(.horizontal, .oneAndAHalfX)
+        .padding(.vertical, .halfX)
+        .background(Color.white.opacity(0.18), in: Capsule())
+        .opacity(workout.isPaused ? 0.7 : 1)
+    }
+}
+
+// MARK: - ProgressBar
+
+private struct ProgressBar: View {
+    
+    let fraction: Double
+    var height: CGFloat = 8
+
+    private var clampedFraction: Double {
+        min(max(fraction, 0), 1)
+    }
+
+    var body: some View {
+        ZStack(alignment: .leading) {
+            Capsule()
+                .fill(Color.black.opacity(0.25))
+
+            // A ZStack child can't ask how wide its container is, so the fill
+            // needs the proxy to size itself proportionally. scaleEffect would
+            // distort the capsule's end caps instead.
+            GeometryReader { proxy in
+                Capsule()
+                    .fill(Color.white)
+                    .frame(width: proxy.size.width * clampedFraction)
+            }
+        }
+        .frame(height: height)
+        // The adjacent label already states the same progress; announcing the
+        // bar too would read it twice.
+        .accessibilityHidden(true)
     }
 }
 
@@ -393,6 +453,47 @@ struct AddPlanCard: View {
 #Preview {
     let container = try! ModelContainer.inMemory(seeded: false)
     return HomeView()
+        .modelContainer(container)
+}
+
+#Preview("Quick Start — idle") {
+    let container = try! ModelContainer.inMemory(seeded: false)
+
+    return QuickStartSection(workout: nil, onStart: {})
+        .padding()
+        .frame(maxHeight: .infinity, alignment: .top)
+        .background(Color.appBg)
+        .modelContainer(container)
+}
+
+#Preview("Quick Start — running") {
+    let container = try! ModelContainer.inMemory(seeded: false)
+    let workouts = WorkoutRepository(context: container.mainContext)
+    let workout = try! workouts.startEmptyWorkout(
+        named: "Push Day",
+        at: Date().addingTimeInterval(-1_725)
+    )
+
+    return QuickStartSection(workout: workout, onStart: {})
+        .padding()
+        .frame(maxHeight: .infinity, alignment: .top)
+        .background(Color.appBg)
+        .modelContainer(container)
+}
+
+#Preview("Quick Start — paused") {
+    let container = try! ModelContainer.inMemory(seeded: false)
+    let workouts = WorkoutRepository(context: container.mainContext)
+    let workout = try! workouts.startEmptyWorkout(
+        named: "Leg Day",
+        at: Date().addingTimeInterval(-4_400)
+    )
+    try! workouts.pause(workout, at: Date().addingTimeInterval(-600))
+
+    return QuickStartSection(workout: workout, onStart: {})
+        .padding()
+        .frame(maxHeight: .infinity, alignment: .top)
+        .background(Color.appBg)
         .modelContainer(container)
 }
 
