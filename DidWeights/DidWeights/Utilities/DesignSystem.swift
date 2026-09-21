@@ -15,7 +15,7 @@ extension Font {
     /// Large screen title (SF Pro Rounded).
     static let appDisplay = Font.system(size: 32, weight: .bold)
     /// Section heading.
-    static let appTitle = Font.system(size: 22, weight: .bold)
+    static let appTitle = Font.system(size: 24, weight: .bold)
     /// Card / row title.
     static let appHeadline = Font.system(size: 17, weight: .semibold)
     /// Body copy.

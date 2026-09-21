@@ -91,24 +91,36 @@ struct HomeView: View {
             Button {
                 handleStartTapped()
             } label: {
-                HStack(spacing: .twoX) {
-                    VStack(alignment: .leading, spacing: .halfX) {
-                        Text(activeWorkouts.isEmpty ? "Start a Workout" : "Resume Workout")
-                            .font(.appTitle)
-                        Text(activeWorkouts.isEmpty ? "Blank session • Log sets & exercises as you go" : "Workout in progress")
-                            .font(.appCaption)
-                            .opacity(0.75)
+                VStack(alignment: .leading, spacing: .oneAndAHalfX) {
+                    HStack(spacing: .fourX) {
+                        VStack(alignment: .leading, spacing: .halfX) {
+                            Text(activeWorkouts.isEmpty ? "Start a Workout" : "Resume Workout")
+                                .font(.appTitle.weight(.heavy))
+                            Text(activeWorkouts.isEmpty ? "Blank session • Log sets & exercises as you go" : "Workout in progress")
+                                .font(.appCaption)
+                                .opacity(0.75)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        
+                        Image(systemName: "arrow.right")
+                            .font(.system(size: 24, weight: .semibold))
+                            .foregroundStyle(Color.primary)
+                            .frame(width: .sevenX, height: .sevenX)
+                            .background(Color.appBackground, in: .circle)
+                            .environment(\.colorScheme, .light)
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-
-                    Image(systemName: "arrow.right")
-                        .font(.system(size: 20, weight: .semibold))
-                        .foregroundStyle(Color.primary)
-                        .frame(width: 52, height: 52)
-                        .background(Color.appBackground, in: .circle)
-                        .environment(\.colorScheme, .light)
+                    Spacer()
+                    Divider()
+                        .background(Color.white)
+                    VStack(alignment: .leading) {
+                        Text("Progress: 4 of 5 Exercises")
+                            .font(.appCaption.bold())
+                        ProgressView(value: 4, total: 5)
+                            .progressViewStyle(.linear)
+                            .tint(.white)
+                    }
                 }
-                .padding(22)
+                .padding(.threeX)
                 .background(Color.primary)
                 .clipShape(RoundedRectangle(cornerRadius: .twoX, style: .continuous))
                 .environment(\.colorScheme, .dark)
