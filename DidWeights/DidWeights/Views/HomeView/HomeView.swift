@@ -43,6 +43,7 @@ struct HomeView: View {
             ScrollView(.vertical) {
                 VStack(spacing: .threeX) {
                     PageHeader(isWorkoutActive: !activeWorkouts.isEmpty)
+                    WeeklyConsistencySection()
                     QuickStartSection(workout: activeWorkouts.first, onStart: handleStartTapped)
                     workoutPlansSection
                 }
@@ -374,13 +375,13 @@ private struct PageHeader: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .accessibilityElement(children: .combine)
 
-            Text(Self.initials)
-                .font(.appHeadline)
-                .foregroundStyle(Color.primaryHeadingTxt)
-                .frame(width: 44, height: 44)
-                .background(Color.card, in: .circle)
-                .overlay(Circle().strokeBorder(Color.primary, lineWidth: 2))
-                .accessibilityHidden(true)
+//            Text(Self.initials)
+//                .font(.appHeadline)
+//                .foregroundStyle(Color.primaryHeadingTxt)
+//                .frame(width: 44, height: 44)
+//                .background(Color.card, in: .circle)
+//                .overlay(Circle().strokeBorder(Color.primary, lineWidth: 2))
+//                .accessibilityHidden(true)
         }
     }
 }
