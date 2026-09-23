@@ -83,5 +83,5 @@ struct WeeklyConsistencySection: View {
         .modelContainer(container)
         .padding()
         .frame(maxHeight: .infinity, alignment: .top)
-        .background(Color.appBg)
+        .background(Color(.neutral))
 }

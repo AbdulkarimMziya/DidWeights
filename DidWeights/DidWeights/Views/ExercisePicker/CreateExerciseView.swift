@@ -68,7 +68,7 @@ struct CreateExerciseView: View {
             .listRowBackground(Color.cardBg)
         }
         .scrollContentBackground(.hidden)
-        .background(Color.appBg)
+        .background(Color(.neutral))
         .tint(Color.accentText)
         .navigationTitle("New Exercise")
         .navigationBarTitleDisplayMode(.large)

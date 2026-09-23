@@ -49,7 +49,7 @@ struct WeeklyConsistencyCard: View {
                 .lineLimit(1)
                 .padding(.horizontal, .oneAndAHalfX)
                 .padding(.vertical, .halfX + .quarterX)
-                .background(Color.accentSoft, in: Capsule())
+                .background(Color(.tertiary), in: Capsule())
         }
     }
 }
@@ -98,20 +98,20 @@ private struct DayCircle: View {
             if day.isToday {
                 // Halo behind today, whether or not it's done yet.
                 Circle()
-                    .fill(Color.accentSoft)
+                    .fill(Color(.tertiary))
                     .frame(width: size + .oneX, height: size + .oneX)
             }
 
             if day.isCompleted {
-                Circle().fill(Color.primary)
+                Circle().fill(Color("Primary"))
                 Image(systemName: "checkmark")
                     .font(.system(size: 15, weight: .bold))
                     .foregroundStyle(Color.checkmarkIcon)
             } else if day.isToday {
                 Circle().fill(Color.cardBg)
-                Circle().strokeBorder(Color.primary, lineWidth: .quarterX)
+                Circle().strokeBorder(Color("Primary"), lineWidth: .quarterX)
                 Circle()
-                    .fill(Color.primary)
+                    .fill(Color("Primary"))
                     .frame(width: .halfX + .quarterX, height: .halfX + .quarterX)
             } else if day.isFuture {
                 Circle().fill(Color.tileBG)
@@ -156,7 +156,7 @@ private extension Array where Element == DayState {
     )
     .padding()
     .frame(maxHeight: .infinity, alignment: .top)
-    .background(Color.appBg)
+    .background(Color(.neutral))
 }
 
 #Preview("Today done, one missed") {
@@ -166,7 +166,7 @@ private extension Array where Element == DayState {
     )
     .padding()
     .frame(maxHeight: .infinity, alignment: .top)
-    .background(Color.appBg)
+    .background(Color(.neutral))
 }
 
 #Preview("Dark") {
@@ -176,6 +176,6 @@ private extension Array where Element == DayState {
     )
     .padding()
     .frame(maxHeight: .infinity, alignment: .top)
-    .background(Color.appBg)
+    .background(Color(.neutral))
     .preferredColorScheme(.dark)
 }

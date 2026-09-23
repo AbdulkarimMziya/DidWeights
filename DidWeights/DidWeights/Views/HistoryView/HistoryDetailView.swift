@@ -70,7 +70,7 @@ private struct HistoryDetailContent: View {
         }
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
-        .background(Color.appBg)
+        .background(Color(.neutral))
         .navigationTitle(workout.name)
     }
 
