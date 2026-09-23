@@ -9,22 +9,17 @@ import Foundation
 import SwiftUI
 
 extension Color {
-    static let appBg = Color("AppBackground")
     static let cardBg = Color("CardRowBG")
-    static let primary = Color("Primary")
-    static let primaryBtn = Color("PrimaryBtnBG")
     static let primaryBtnTxt = Color("PrimaryBtnText")
-    static let pillBg = Color("PillBackground")
-    static let deleteBtnBg = Color("DeleteBtnBG")
-    static let deleteBtnTxt = Color("DeleteBtnText")
-    static let completedRowBg = Color("CompletedRowBG")
-    static let checkmarkBoxBg = Color("CheckmarkBoxBG")
     static let checkmarkIcon = Color("CheckMarkIcon")
-    static let inputfieldBorder = Color("InputFieldBorder")
     static let primaryHeadingTxt = Color("PrimaryHeadingText")
     static let secondaryTxt = Color("SecondaryText")
 
-    // Redesign tokens `tileBG`, `accentText`, `accentSoft`, `hairline`,
-    // `planCardBorder` come from the generated asset symbols (colorsets of
-    // the same name in Assets.xcassets).
+    // The palette colors are read straight from Assets.xcassets:
+    // `Color(.neutral)` and `Color(.tertiary)` use the generated symbols.
+    // "Primary" and "Secondary" clash with SwiftUI's own `Color.primary` /
+    // `Color.secondary`, so Xcode generates no symbol for them: use
+    // `Color("Primary")` and `Color("Secondary")`. The redesign tokens
+    // `tileBG`, `accentText`, `hairline`, `planCardBorder` and `card` also
+    // come from generated symbols.
 }

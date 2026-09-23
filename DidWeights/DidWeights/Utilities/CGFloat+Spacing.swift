@@ -19,9 +19,5 @@ extension CGFloat {
     static let threeX: CGFloat = 24
     static let fourX: CGFloat = 32
     static let fiveX: CGFloat = 40
-    static let sixX: CGFloat = 48
     static let sevenX: CGFloat = 56
-    static let eightX: CGFloat = 64
-    static let nineX: CGFloat = 72
-    static let tenX: CGFloat = 80
 }

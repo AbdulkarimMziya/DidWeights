@@ -36,7 +36,6 @@ enum Radius {
     static let card: CGFloat = 16
     static let button: CGFloat = 16
     static let tile: CGFloat = 16
-    static let hero: CGFloat = 28
 }
 
 /// Fixed column widths for the active-workout set table. `SetHeaderView` and
@@ -88,24 +87,15 @@ extension View {
 // inside a `List` row to be hit-tested independently.
 
 extension View {
-    /// Filled accent action — the app's green (matches the app icon) with white
-    /// text. Resolves from the `PrimaryBtn*` colorsets.
+    /// Filled accent action — the deep green used on Home's Quick Start card,
+    /// with white text. White stays legible on that green in both light and dark
+    /// mode (about 5.5:1), so the text doesn't switch with the theme.
     func primaryActionLabel(compact: Bool = false) -> some View {
         self
             .font(.system(size: compact ? 15 : 17, weight: .bold))
-            .foregroundStyle(Color.primaryBtnTxt)
+            .foregroundStyle(Color.white)
             .frame(maxWidth: .infinity, minHeight: compact ? 40 : 56)
-            .background(Color.primaryBtn)
-            .clipShape(RoundedRectangle(cornerRadius: compact ? 8 : Radius.button, style: .continuous))
-    }
-
-    /// Tinted destructive action, filled pill (Delete Set).
-    func destructiveActionLabel(compact: Bool = false) -> some View {
-        self
-            .font(.system(size: compact ? 15 : 17, weight: .bold))
-            .foregroundStyle(Color.deleteBtnTxt)
-            .frame(maxWidth: .infinity, minHeight: compact ? 40 : 56)
-            .background(Color.deleteBtnBg)
+            .background(Color("Primary"))
             .clipShape(RoundedRectangle(cornerRadius: compact ? 8 : Radius.button, style: .continuous))
     }
 
