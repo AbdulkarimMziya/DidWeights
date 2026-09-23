@@ -65,7 +65,7 @@ struct ExercisePickerView: View {
             }
             .listStyle(.insetGrouped)
             .scrollContentBackground(.hidden)
-            .background(Color.appBg)
+            .background(Color(.neutral))
             .tint(Color.accentText)
             .onTapGesture { searchFieldFocused = false }
             .navigationTitle("Add Exercise")
@@ -124,11 +124,11 @@ struct ExercisePickerView: View {
         .background(Color.cardBg, in: RoundedRectangle(cornerRadius: Radius.button, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: Radius.button, style: .continuous)
-                .stroke(Color.inputfieldBorder, lineWidth: 1)
+                .stroke(Color("Secondary"), lineWidth: 1)
         )
         .padding(.horizontal, .twoX)
         .padding(.vertical, .oneX)
-        .background(Color.appBg)
+        .background(Color(.neutral))
     }
 
     private func exerciseRow(_ exercise: Exercise) -> some View {

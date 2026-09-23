@@ -43,12 +43,13 @@ struct HomeView: View {
             ScrollView(.vertical) {
                 VStack(spacing: .threeX) {
                     PageHeader(isWorkoutActive: !activeWorkouts.isEmpty)
+                    WeeklyConsistencySection()
                     QuickStartSection(workout: activeWorkouts.first, onStart: handleStartTapped)
                     workoutPlansSection
                 }
                 .padding()
             }
-            .background(Color.appBg.ignoresSafeArea())
+            .background(Color(.neutral).ignoresSafeArea())
             .scrollBounceBehavior(.always)
             .toolbar(.hidden, for: .navigationBar)
             .onAppear {
@@ -103,7 +104,7 @@ struct HomeView: View {
                         .font(.system(size: 20, weight: .semibold))
                         .foregroundStyle(Color.primaryBtnTxt)
                         .padding(.oneX)
-                        .background(Color.primary, in: .circle)
+                        .background(Color("Primary"), in: .circle)
                         .environment(\.colorScheme, .light)
                 }
             }
@@ -223,7 +224,7 @@ private struct QuickStartSection: View {
                                 HStack(spacing: .halfX) {
                                     Circle()
                                         .frame(width: .oneX)
-                                        .foregroundColor(Color.checkmarkBoxBG)
+                                        .foregroundColor(Color("Secondary"))
                                     Text("In progress")
                                 }
                             } else {
@@ -247,9 +248,9 @@ private struct QuickStartSection: View {
 
                         Image(systemName: "arrow.right")
                             .font(.system(size: 24, weight: .semibold))
-                            .foregroundStyle(Color.primary)
+                            .foregroundStyle(Color("Primary"))
                             .frame(width: .sevenX, height: .sevenX)
-                            .background(Color.appBackground, in: .circle)
+                            .background(Color(.neutral), in: .circle)
                             .environment(\.colorScheme, .light)
                     }
 
@@ -265,7 +266,7 @@ private struct QuickStartSection: View {
                     }
                 }
                 .padding(.twoAndAHalfX)
-                .background(Color.primary)
+                .background(Color("Primary"))
                 .clipShape(RoundedRectangle(cornerRadius: .twoX, style: .continuous))
                 .environment(\.colorScheme, .dark)
             }
@@ -374,13 +375,13 @@ private struct PageHeader: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .accessibilityElement(children: .combine)
 
-            Text(Self.initials)
-                .font(.appHeadline)
-                .foregroundStyle(Color.primaryHeadingTxt)
-                .frame(width: 44, height: 44)
-                .background(Color.card, in: .circle)
-                .overlay(Circle().strokeBorder(Color.primary, lineWidth: 2))
-                .accessibilityHidden(true)
+//            Text(Self.initials)
+//                .font(.appHeadline)
+//                .foregroundStyle(Color.primaryHeadingTxt)
+//                .frame(width: 44, height: 44)
+//                .background(Color.card, in: .circle)
+//                .overlay(Circle().strokeBorder(Color("Primary"), lineWidth: 2))
+//                .accessibilityHidden(true)
         }
     }
 }
@@ -438,7 +439,7 @@ struct WorkoutTemplateCard: View {
                         .font(.system(size: 14, weight: .bold))
                         .foregroundStyle(Color.accentText)
                         .padding(.oneX)
-                        .background(Color.accentSoft, in: Capsule())
+                        .background(Color(.tertiary), in: Capsule())
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
@@ -456,7 +457,7 @@ struct AddPlanCard: View {
             .overlay {
                 Text("Tap to Add a Plan")
                     .font(.appHeadline)
-                    .foregroundStyle(Color.primary)
+                    .foregroundStyle(Color("Primary"))
                     .multilineTextAlignment(.center)
                     .padding()
             }
@@ -486,7 +487,7 @@ struct AddPlanCard: View {
     return QuickStartSection(workout: nil, onStart: {})
         .padding()
         .frame(maxHeight: .infinity, alignment: .top)
-        .background(Color.appBg)
+        .background(Color(.neutral))
         .modelContainer(container)
 }
 
@@ -501,7 +502,7 @@ struct AddPlanCard: View {
     return QuickStartSection(workout: workout, onStart: {})
         .padding()
         .frame(maxHeight: .infinity, alignment: .top)
-        .background(Color.appBg)
+        .background(Color(.neutral))
         .modelContainer(container)
 }
 
@@ -517,7 +518,7 @@ struct AddPlanCard: View {
     return QuickStartSection(workout: workout, onStart: {})
         .padding()
         .frame(maxHeight: .infinity, alignment: .top)
-        .background(Color.appBg)
+        .background(Color(.neutral))
         .modelContainer(container)
 }
 
@@ -528,5 +529,5 @@ struct AddPlanCard: View {
     }
     .padding()
     .frame(maxHeight: .infinity, alignment: .top)
-    .background(Color.appBg)
+    .background(Color(.neutral))
 }

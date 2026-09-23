@@ -21,8 +21,8 @@ struct SplashScreenView: View {
                 .scaledToFit()
                 .frame(width: 140, height: 140)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .foregroundStyle(Color.primary)
-                .background(Color.appBackground)
+                .foregroundStyle(Color("Primary"))
+                .background(Color(.neutral))
                 .transition(.opacity)
                 .onAppear {
                     DispatchQueue.main.asyncAfter(deadline: .now() + 2) {

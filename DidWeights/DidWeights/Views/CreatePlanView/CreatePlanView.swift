@@ -72,7 +72,7 @@ struct CreatePlanView: View {
                 .listRowBackground(Color.cardBg)
             }
             .scrollContentBackground(.hidden)
-            .background(Color.appBg)
+            .background(Color(.neutral))
             .tint(Color.accentText)
             .navigationTitle(editingPlan == nil ?
                              planName.isEmpty ? "New Plan" : planName

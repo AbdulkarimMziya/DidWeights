@@ -34,7 +34,7 @@ struct ExerciseThumbnail: View {
             .font(.system(size: size * 0.46, weight: .semibold))
             .foregroundStyle(Color.accentText)
             .frame(width: size, height: size)
-            .background(Color.accentSoft)
+            .background(Color(.tertiary))
             .clipShape(RoundedRectangle(cornerRadius: size * 0.32, style: .continuous))
     }
 }
@@ -46,5 +46,5 @@ struct ExerciseThumbnail: View {
         ExerciseThumbnail(muscleGroup: nil)
     }
     .padding()
-    .background(Color.appBg)
+    .background(Color(.neutral))
 }

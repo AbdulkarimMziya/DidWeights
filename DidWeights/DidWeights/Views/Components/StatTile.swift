@@ -43,5 +43,5 @@ struct StatTile: View {
         StatTile(systemImage: "repeat", value: "84", label: "Reps")
     }
     .padding()
-    .background(Color.appBg)
+    .background(Color(.neutral))
 }
