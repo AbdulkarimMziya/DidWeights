@@ -36,7 +36,7 @@ struct ActiveWorkoutView: View {
             ActiveWorkoutContent(workout: activeWorkouts[0])
                 .onAppear { hasShownWorkout = true }
         } else if hasShownWorkout {
-            Color.appBg.ignoresSafeArea()
+            Color(.neutral).ignoresSafeArea()
         } else if activeWorkouts.isEmpty {
             ContentUnavailableView(
                 "No Active Workout",
@@ -80,10 +80,14 @@ struct ActiveWorkoutContent: View {
         NavigationStack {
             List {
                 Section {
-                    WorkoutHeaderView(workout: workout, exerciseCount: exerciseGroups.count)
-                        .listRowSeparator(.hidden)
-                        .listRowBackground(Color.clear)
-                        .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+                    VStack(alignment: .leading, spacing: .twoX) {
+                        WorkoutTitleView(name: workout.name)
+                        WorkoutHeaderView(workout: workout, exerciseCount: exerciseGroups.count)
+                    }
+                    .listRowSeparator(.hidden)
+                    .listRowBackground(Color.clear)
+                    // Side margins come from the inset-grouped list itself.
+                    .listRowInsets(EdgeInsets(top: .oneX, leading: 0, bottom: .oneX, trailing: 0))
                 }
 
                 ForEach(exerciseGroups) { group in
@@ -104,12 +108,17 @@ struct ActiveWorkoutContent: View {
                     .listRowBackground(Color.clear)
                 }
             }
-            .listStyle(.plain)
+            // Inset-grouped renders each exercise section as a rounded card,
+            // like Home's cards, while keeping List's swipe-to-delete.
+            .listStyle(.insetGrouped)
+            .listSectionSpacing(.custom(.twoX))
             .scrollContentBackground(.hidden)
-            .background(Color.appBg)
+            .background(Color(.neutral))
             .scrollBounceBehavior(.always)
             .onTapGesture { focusedField = nil }
-            .navigationTitle(workout.name)
+            // The workout name lives in the Home-style header at the top of
+            // the list, so the bar itself stays empty apart from Finish.
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Finish") {
@@ -219,10 +228,51 @@ struct ExerciseGroupView: View {
     private var workouts: WorkoutRepository { WorkoutRepository(context: modelContext) }
 
     var body: some View {
+        // The whole section is one card: title row, column labels, set rows,
+        // then the Add Set button.
         Section {
+            VStack(alignment: .leading, spacing: .oneX) {
+                HStack {
+                    Text(group.exercise.name)
+                        .font(.appHeadline)
+                        .foregroundStyle(Color.primaryHeadingTxt)
+                    Spacer()
+                    Menu {
+                        Button(role: .destructive) {
+                            do {
+                                try workouts.removeExercise(group.exercise, from: workout)
+                            } catch {
+                                errorMessage = "Couldn't remove exercise: \(error.localizedDescription)"
+                            }
+                        } label: {
+                            Label("Remove Exercise", systemImage: "trash")
+                        }
+                        .tint(Color.red)
+                    } label: {
+                        // Same treatment as the options button on Home's plan cards.
+                        Image(systemName: "ellipsis")
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundStyle(Color.accentText)
+                            .frame(width: .fiveX, height: .threeX)
+                            .background(Color(.tertiary), in: Capsule())
+                    }
+                }
+
+                SetHeaderView()
+            }
+            .listRowSeparator(.hidden)
+            .listRowBackground(Color.cardBg)
+
             ForEach(Array(group.sets.enumerated()), id: \.element.id) { index, set in
                 ExerciseSetRowView(set: set, index: index, focusedField: $focusedField)
-                    .listRowBackground(set.isCompleted ? Color.accentSoft : Color.clear)
+                    // tertiary is translucent in dark mode, so it goes over the card
+                    // surface instead of replacing it.
+                    .listRowBackground(
+                        ZStack {
+                            Color.cardBg
+                            if set.isCompleted { Color(.tertiary) }
+                        }
+                    )
                     .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                         Button(role: .destructive) {
                             deleteSet(set)
@@ -247,37 +297,8 @@ struct ExerciseGroupView: View {
                 .buttonStyle(.borderless)
             }
             .listRowSeparator(.hidden)
-            .listRowBackground(Color.clear)
-            .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 12, trailing: 16))
-        } header: {
-            VStack(alignment: .leading, spacing: .oneX) {
-                HStack {
-                    Text(group.exercise.name)
-                        .font(.appHeadline)
-                        .foregroundStyle(Color.primaryHeadingTxt)
-                    Spacer()
-                    Menu {
-                        Button(role: .destructive) {
-                            do {
-                                try workouts.removeExercise(group.exercise, from: workout)
-                            } catch {
-                                errorMessage = "Couldn't remove exercise: \(error.localizedDescription)"
-                            }
-                        } label: {
-                            Label("Remove Exercise", systemImage: "trash")
-                        }
-                        .tint(Color.red)
-                    } label: {
-                        Image(systemName: "ellipsis")
-                            .font(.system(size: 14, weight: .bold))
-                            .foregroundStyle(Color.secondaryTxt)
-                            .frame(width: 40, height: 24)
-                            .background(Color.secondaryTxt.opacity(0.12), in: .capsule)
-                    }
-                }
-
-                SetHeaderView()
-            }
+            .listRowBackground(Color.cardBg)
+            .listRowInsets(EdgeInsets(top: .oneX, leading: .twoX, bottom: .oneAndAHalfX, trailing: .twoX))
         }
     }
 
@@ -292,7 +313,7 @@ struct ExerciseGroupView: View {
 
 struct SetHeaderView: View {
     var body: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: .halfX + .quarterX) {
             Text("SET").frame(width: SetColumn.index)
             Text("PREVIOUS").frame(maxWidth: .infinity)
             Text("LBS").frame(width: SetColumn.weight)
@@ -300,9 +321,9 @@ struct SetHeaderView: View {
             Image(systemName: "checkmark")
                 .frame(width: SetColumn.check)
         }
-        .font(.system(size: 12, weight: .semibold))
+        .font(.appMicro.weight(.semibold))
         .foregroundStyle(Color.secondaryTxt)
-        .padding(.vertical, 4)
+        .padding(.vertical, .halfX)
     }
 }
 
@@ -315,9 +336,9 @@ struct ExerciseSetRowView: View {
     private var workouts: WorkoutRepository { WorkoutRepository(context: modelContext) }
 
     var body: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: .halfX + .quarterX) {
             Text("\(index + 1)")
-                .font(.system(size: 15, weight: .bold))
+                .font(.appBody.weight(.bold))
                 .foregroundStyle(Color.primaryHeadingTxt)
                 .frame(width: SetColumn.index)
 
@@ -331,9 +352,9 @@ struct ExerciseSetRowView: View {
                 .keyboardType(.decimalPad)
                 .focused($focusedField, equals: .weight(set.id))
                 .multilineTextAlignment(.center)
-                .font(.system(size: 15, weight: .semibold))
-                .frame(width: SetColumn.weight, height: 24)
-                .background(fieldFill(.weight(set.id)), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .font(.appBody.weight(.semibold))
+                .frame(width: SetColumn.weight, height: .threeX)
+                .background(fieldFill(.weight(set.id)), in: RoundedRectangle(cornerRadius: Radius.card, style: .continuous))
                 .onChange(of: set.weight) {
                     try? workouts.updateSet(set, reps: set.reps, weight: set.weight)
                 }
@@ -342,9 +363,9 @@ struct ExerciseSetRowView: View {
                 .keyboardType(.numberPad)
                 .focused($focusedField, equals: .reps(set.id))
                 .multilineTextAlignment(.center)
-                .font(.system(size: 15, weight: .semibold))
-                .frame(width: SetColumn.reps, height: 24)
-                .background(fieldFill(.reps(set.id)), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .font(.appBody.weight(.semibold))
+                .frame(width: SetColumn.reps, height: .threeX)
+                .background(fieldFill(.reps(set.id)), in: RoundedRectangle(cornerRadius: Radius.card, style: .continuous))
                 .onChange(of: set.reps) {
                     try? workouts.updateSet(set, reps: set.reps, weight: set.weight)
                 }
@@ -353,11 +374,11 @@ struct ExerciseSetRowView: View {
                 try? workouts.toggleCompletion(of: set)
             } label: {
                 ZStack {
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .fill(set.isCompleted ? Color.primaryBtn : Color.clear)
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    RoundedRectangle(cornerRadius: .oneX, style: .continuous)
+                        .fill(set.isCompleted ? Color("Secondary") : Color.clear)
+                    RoundedRectangle(cornerRadius: .oneX, style: .continuous)
                         .stroke(
-                            set.isCompleted ? Color.primaryBtn : Color.secondaryTxt.opacity(0.5),
+                            set.isCompleted ? Color("Secondary") : Color.secondaryTxt.opacity(0.5),
                             lineWidth: 1.5
                         )
                     if set.isCompleted {
@@ -366,7 +387,7 @@ struct ExerciseSetRowView: View {
                             .foregroundStyle(Color.primaryBtnTxt)
                     }
                 }
-                .frame(width: 24, height: 24)
+                .frame(width: .threeX, height: .threeX)
             }
             .frame(width: SetColumn.check)
             .buttonStyle(.borderless)
@@ -374,11 +395,34 @@ struct ExerciseSetRowView: View {
     }
 
     private func fieldFill(_ field: ActiveWorkoutContent.Field) -> Color {
-        focusedField == field ? Color.accentSoft : Color.clear
+        focusedField == field ? Color(.tertiary) : Color.clear
     }
 }
 
 // MARK: - Header
+
+/// Home-style page title: small monospaced eyebrow over a large headline.
+struct WorkoutTitleView: View {
+    let name: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: .halfX) {
+            Text("CURRENT SESSION ACTIVE")
+                .font(.appEyebrow)
+                .tracking(0.8)
+                .foregroundStyle(Color.metaText)
+
+            Text(name)
+                .font(.appDisplay)
+                .foregroundStyle(Color.primaryHeadingTxt)
+                .lineLimit(2)
+                .minimumScaleFactor(0.8)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isHeader)
+    }
+}
 
 struct WorkoutHeaderView: View {
     let workout: Workout
