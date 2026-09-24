@@ -33,11 +33,6 @@ struct HomeView: View {
     private var workouts: WorkoutRepository { WorkoutRepository(context: modelContext) }
     private var presets: PresetRepository { PresetRepository(context: modelContext) }
 
-    let columns = [
-        GridItem(.flexible(), spacing: .twoX),
-        GridItem(.flexible(), spacing: .twoX)
-    ]
-
     var body: some View {
         NavigationStack {
             ScrollView(.vertical) {
@@ -109,21 +104,22 @@ struct HomeView: View {
                 }
             }
 
-            LazyVGrid(columns: columns, spacing: .twoX) {
-                ForEach(savedPlans) { plan in
-                    WorkoutTemplateCard(plan: plan) {
-                        selectedPlan = plan
-                    }
-                    .onTapGesture {
-                        planPendingEdit = plan
+            PlanFilterChip(title: "All Plans")
+
+            LazyVStack(spacing: .twoX) {
+                if savedPlans.isEmpty {
+                    AddPlanCard()
+                        .onTapGesture { presentCreatePlan = true }
+                } else {
+                    ForEach(savedPlans) { plan in
+                        WorkoutTemplateCard(
+                            plan: plan,
+                            isStartDisabled: !activeWorkouts.isEmpty,
+                            onStart: { handleStartFromPlanTapped(plan) },
+                            onOptions: { selectedPlan = plan }
+                        )
                     }
                 }
-
-                // Always the last cell — a standing affordance to create a
-                // plan. With no saved plans it's the only cell, matching the
-                // old empty state.
-                AddPlanCard()
-                    .onTapGesture { presentCreatePlan = true }
             }
             .confirmationDialog(
                 selectedPlan?.name ?? "Plan",
@@ -134,8 +130,8 @@ struct HomeView: View {
                 titleVisibility: .visible
             ) {
                 if let plan = selectedPlan {
-                    Button("Start Workout") {
-                        handleStartFromPlanTapped(plan)
+                    Button("Edit Plan") {
+                        planPendingEdit = plan
                         selectedPlan = nil
                     }
                     Button("Delete Plan", role: .destructive) {
@@ -277,6 +273,21 @@ private struct QuickStartSection: View {
     }
 }
 
+// MARK: - PlanFilterChip
+
+private struct PlanFilterChip: View {
+    let title: String
+
+    var body: some View {
+        Text(title)
+            .font(.appCaption.weight(.semibold))
+            .foregroundStyle(Color(.neutral))
+            .padding(.horizontal, .twoX)
+            .padding(.vertical, .oneX)
+            .background(Color.primaryHeadingTxt, in: Capsule())
+    }
+}
+
 // MARK: - Pill
 
 private struct Pill<Content: View>: View {
@@ -386,92 +397,114 @@ private struct PageHeader: View {
     }
 }
 
-
-
-// Plan grid tiles are a touch wider than tall, so each takes less area than a
-// full square. WorkoutTemplateCard and AddPlanCard share this so rows line up.
-private let planCardAspectRatio: CGFloat = 1.15
-
 struct WorkoutTemplateCard: View {
     let plan: WorkoutPreset
+    var isStartDisabled: Bool = false
+    var onStart: () -> Void
     var onOptions: () -> Void
 
     var body: some View {
-        // Color.clear forced to this ratio takes the full grid-column width, so
-        // the card footprint is column-width driven regardless of content height.
-        Color.clear
-            .aspectRatio(planCardAspectRatio, contentMode: .fit)
-            .overlay {
-                VStack(alignment: .leading, spacing: 10) {
+        Card(style: .solid(fill: Color(.neutral))) {
+            VStack(alignment: .leading, spacing: .oneX) {
+                HStack(alignment: .top) {
                     ExerciseThumbnail(muscleGroup: plan.orderedExercises.first?.muscleGroup, size: 40)
 
-                    Text(plan.name)
-                        .font(.appHeadline)
-                        .foregroundStyle(Color.primaryHeadingTxt)
-                        .lineLimit(1)
+                    Spacer()
 
-                    Spacer(minLength: 0)
+                    Button(action: onOptions) {
+                        Image(systemName: "ellipsis")
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundStyle(Color.accentText)
+                            .padding(.oneX)
+                            .background(Color(.tertiary), in: Capsule())
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Plan options")
+                    .accessibilityHint("Edit or delete \(plan.name)")
+                }
 
-                    VStack(alignment: .leading, spacing: .halfX) {
-                        // No decode — a direct relationship count.
-                        Text("\(plan.exercises.count) exercises")
-                            .font(.appCaption)
-                            .foregroundStyle(Color.secondaryTxt)
+                Text(plan.name)
+                    .font(.appHeadline)
+                    .foregroundStyle(Color.primaryHeadingTxt)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
 
-                        Group {
-                            if let lastActive = plan.lastActive {
-                                Text("Done: \(lastActive.formatted(.relative(presentation: .named)))")
-                            } else {
-                                Text("Never completed")
-                            }
-                        }
-                        .font(.appMicro)
-                        .foregroundStyle(Color.secondaryTxt.opacity(0.85))
+                HStack(spacing: .halfX) {
+                    Text("\(plan.exercises.count) exercises")
+
+                    Text("•")
+
+                    if let lastActive = plan.lastActive {
+                        Text("Done: \(lastActive.formatted(.relative(presentation: .named)))")
+                    } else {
+                        Text("Never completed")
                     }
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
-                .padding(.twoX)
+                .font(.appCaption)
+                .foregroundStyle(Color.secondaryTxt)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+
+                StartRoutineButton(isDisabled: isStartDisabled, action: onStart)
+                    .accessibilityLabel("Start \(plan.name)")
+                    .padding(.top, .oneX)
             }
-            .appCard()
-            .overlay(alignment: .topTrailing) {
-                Button(action: onOptions) {
-                    Image(systemName: "ellipsis")
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundStyle(Color.accentText)
-                        .padding(.oneX)
-                        .background(Color(.tertiary), in: Capsule())
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Plan options")
-                .accessibilityHint("Start, delete, or view options for \(plan.name)")
-                .padding(.oneX)
+        }
+    }
+}
+
+// MARK: - StartRoutineButton
+
+private struct StartRoutineButton: View {
+    let isDisabled: Bool
+    var action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: .oneX) {
+                Text("Start Routine")
+                Image(systemName: "arrow.right")
             }
+            .font(.system(size: 15, weight: .semibold))
+            .foregroundStyle(Color.primaryHeadingTxt)
+            .frame(maxWidth: .infinity, minHeight: 44)
+            .background(Color.cardBg, in: RoundedRectangle(cornerRadius: .oneAndAHalfX, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .disabled(isDisabled)
+        .opacity(isDisabled ? 0.45 : 1)
+        .accessibilityHint(isDisabled ? "Unavailable while another workout is in progress" : "Starts a workout from this plan")
     }
 }
 
 struct AddPlanCard: View {
     var body: some View {
-        Color.clear
-            .aspectRatio(planCardAspectRatio, contentMode: .fit)
-            .overlay {
+        Card(style: .dashed, alignment: .center) {
+            VStack(spacing: .oneX) {
+                Image(systemName: "plus")
+                    .font(.system(size: 22, weight: .semibold))
+                    .foregroundStyle(Color.accentText)
+                    .frame(width: .fiveX, height: .fiveX)
+                    .background(Color.card, in: RoundedRectangle(cornerRadius: .oneAndAHalfX, style: .continuous))
+
                 Text("Tap to Add a Plan")
                     .font(.appHeadline)
-                    .foregroundStyle(Color("Primary"))
-                    .multilineTextAlignment(.center)
-                    .padding()
+                    .foregroundStyle(Color.accentText)
+
+                Text("Create a custom split")
+                    .font(.appCaption)
+                    .foregroundStyle(Color.metaText)
             }
-            .background(Color.card, in: RoundedRectangle(cornerRadius: Radius.card, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: Radius.card, style: .continuous)
-                    .strokeBorder(
-                        Color.planCardBorder,
-                        style: StrokeStyle(lineWidth: 1.5, dash: [6])
-                    )
-            )
-            .contentShape(Rectangle())
-            .accessibilityAddTraits(.isButton)
-            .accessibilityLabel("Add a plan")
+            .frame(maxWidth: .infinity)
+            .multilineTextAlignment(.center)
+            .padding(.vertical, .twoX)
+        }
+        .contentShape(Rectangle())
+        .accessibilityElement(children: .ignore)
+        .accessibilityAddTraits(.isButton)
+        .accessibilityLabel("Add a plan")
+        .accessibilityHint("Create a custom split")
     }
 }
 
@@ -530,4 +563,74 @@ struct AddPlanCard: View {
     .padding()
     .frame(maxHeight: .infinity, alignment: .top)
     .background(Color(.neutral))
+}
+
+#Preview("Plan cards — empty") {
+    VStack(spacing: .twoX) {
+        PlanFilterChip(title: "All Plans")
+            .frame(maxWidth: .infinity, alignment: .leading)
+        AddPlanCard()
+    }
+    .padding()
+    .frame(maxHeight: .infinity, alignment: .top)
+    .background(Color(.neutral))
+}
+
+#Preview("Plan cards — with plans") {
+    let container = try! ModelContainer.inMemory(seeded: false)
+    let plans = PlanCardPreviewFixture.make(in: container)
+
+    return VStack(spacing: .twoX) {
+        ForEach(plans) { plan in
+            WorkoutTemplateCard(plan: plan, onStart: {}, onOptions: {})
+        }
+    }
+    .padding()
+    .frame(maxHeight: .infinity, alignment: .top)
+    .background(Color(.neutral))
+    .modelContainer(container)
+}
+
+#Preview("Plan cards — start disabled") {
+    let container = try! ModelContainer.inMemory(seeded: false)
+    let plans = PlanCardPreviewFixture.make(in: container)
+
+    return VStack(spacing: .twoX) {
+        ForEach(plans) { plan in
+            WorkoutTemplateCard(plan: plan, isStartDisabled: true, onStart: {}, onOptions: {})
+        }
+    }
+    .padding()
+    .frame(maxHeight: .infinity, alignment: .top)
+    .background(Color(.neutral))
+    .modelContainer(container)
+}
+
+/// `ModelContainer.inMemory(seeded:)` seeds a workout, not presets, so the plan
+/// card previews build their own.
+@MainActor
+private enum PlanCardPreviewFixture {
+    static func make(in container: ModelContainer) -> [WorkoutPreset] {
+        let exercises = ExerciseRepository(context: container.mainContext)
+        let presets = PresetRepository(context: container.mainContext)
+
+        let bench = try! exercises.findOrCreate(name: "Bench Press")
+        let fly = try! exercises.findOrCreate(name: "Cable Fly")
+        let squat = try! exercises.findOrCreate(name: "Squat")
+
+        let push = try! presets.create(
+            name: "Chest & Triceps Power",
+            exercises: [bench, fly],
+            defaultSetCount: 3
+        )
+        push.lastActive = Date().addingTimeInterval(-3 * 86_400)
+
+        let legs = try! presets.create(
+            name: "Quad & Calves Hypertrophy",
+            exercises: [squat],
+            defaultSetCount: 4
+        )
+
+        return [push, legs]
+    }
 }
