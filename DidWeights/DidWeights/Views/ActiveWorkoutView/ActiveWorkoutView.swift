@@ -66,6 +66,10 @@ struct ActiveWorkoutContent: View {
     @State private var showAddExercise = false
     @FocusState private var focusedField: Field?
 
+    // Ephemeral session state, not domain data — never touches modelContext.
+    @State private var restTimer = RestTimerModel()
+    @State private var showRestTimerPicker = false
+
     // A Hashable enum instead of a bare UUID, so weight and reps fields on
     // the same set never share one focus identity (the old bug where
     // "next field" couldn't work because both fields used workSet.id).
@@ -94,6 +98,7 @@ struct ActiveWorkoutContent: View {
                     ExerciseGroupView(
                         workout: workout,
                         group: group,
+                        restTimer: restTimer,
                         focusedField: $focusedField,
                         errorMessage: $errorMessage
                     )
@@ -120,6 +125,19 @@ struct ActiveWorkoutContent: View {
             // the list, so the bar itself stays empty apart from Finish.
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
+                        showRestTimerPicker = true
+                    } label: {
+                        Image(systemName: "timer")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundStyle(Color.blue)
+                            .frame(width: .fiveX, height: .threeX)
+                    }
+                }
+                ToolbarItem(placement: .principal) {
+                    RestTimerBar(timer: restTimer)
+                }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Finish") {
                         handleFinishTapped()
@@ -134,6 +152,9 @@ struct ActiveWorkoutContent: View {
             }
             .sheet(isPresented: $showAddExercise) {
                 AddExerciseSheet(workout: workout)
+            }
+            .sheet(isPresented: $showRestTimerPicker) {
+                RestTimerPickerSheet(timer: restTimer)
             }
             .alert("Something went wrong", isPresented: Binding(
                 get: { errorMessage != nil },
@@ -221,6 +242,7 @@ struct ActiveWorkoutContent: View {
 struct ExerciseGroupView: View {
     let workout: Workout
     let group: ExerciseGroup
+    let restTimer: RestTimerModel
     @Environment(\.modelContext) private var modelContext
     @FocusState.Binding var focusedField: ActiveWorkoutContent.Field?
     @Binding var errorMessage: String?
@@ -264,7 +286,7 @@ struct ExerciseGroupView: View {
             .listRowBackground(Color.cardBg)
 
             ForEach(Array(group.sets.enumerated()), id: \.element.id) { index, set in
-                ExerciseSetRowView(set: set, index: index, focusedField: $focusedField)
+                ExerciseSetRowView(set: set, index: index, restTimer: restTimer, focusedField: $focusedField)
                     // tertiary is translucent in dark mode, so it goes over the card
                     // surface instead of replacing it.
                     .listRowBackground(
@@ -330,6 +352,7 @@ struct SetHeaderView: View {
 struct ExerciseSetRowView: View {
     @Bindable var set: ExerciseSet
     let index: Int
+    let restTimer: RestTimerModel
     @Environment(\.modelContext) private var modelContext
     @FocusState.Binding var focusedField: ActiveWorkoutContent.Field?
 
@@ -371,7 +394,13 @@ struct ExerciseSetRowView: View {
                 }
 
             Button {
+                let wasCompleted = set.isCompleted
                 try? workouts.toggleCompletion(of: set)
+                // Start rest only on the completing transition, and only if
+                // nothing's already counting down.
+                if !wasCompleted && set.isCompleted && !restTimer.isRunning {
+                    restTimer.start(duration: restTimer.lastUsedDuration)
+                }
             } label: {
                 ZStack {
                     RoundedRectangle(cornerRadius: .oneX, style: .continuous)
