@@ -65,7 +65,21 @@ below: **one shared `@Observable` instance, read from multiple views.**
 
 Each section below is independent — do them in any order, or skip ones you don't need yet.
 
-### Step A: Auto-start the timer when a set is completed — ✅ Implemented
+### Step A: Auto-start the timer when a set is completed — ➖ Removed
+
+Implemented as designed below, then explicitly removed at the user's request: the rest timer is
+manual-only — tap the timer icon, pick a duration, Start. Completing a set no longer starts
+anything on its own. `lastUsedDuration` (the auto-start default) was removed from
+`RestTimerModel` along with it, since nothing read it once the auto-start call site was gone, and
+the `restTimer` parameter was dropped from `ExerciseGroupView`/`ExerciseSetRowView` for the same
+reason — it was only ever threaded down for this hook.
+
+The original implementation is kept below for history, not as a guide to rebuild it — if this
+ever comes back, re-check whether `lastUsedDuration` is still the right default source, since
+Settings' Default Rest (`docs/SETTINGS_AND_UNITS.md`) didn't exist when this was first written.
+
+<details>
+<summary>Original implementation (removed)</summary>
 
 Implemented as designed below, with one confirmed decision: completing a set while a timer is
 already running does **not** reset it (`!restTimer.isRunning` guard) — see
@@ -152,6 +166,8 @@ struct ExerciseSetRowView: View {
 That's the whole hook. Open decision for you: should this only fire if no timer is currently
 running (so completing a second set mid-rest doesn't reset the clock), or should it always
 restart? A one-line guard (`if !restTimer.isRunning { ... }`) covers the first option.
+
+</details>
 
 ---
 
