@@ -60,10 +60,11 @@ extension View {
 
 private struct AppCard: ViewModifier {
     var cornerRadius: CGFloat = Radius.card
+    var fill: Color = .cardBg
 
     func body(content: Content) -> some View {
         content
-            .background(Color.cardBg)
+            .background(fill)
             .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
@@ -75,8 +76,8 @@ private struct AppCard: ViewModifier {
 
 extension View {
     /// Standard surface: card background, continuous corners, hairline border, soft shadow.
-    func appCard(cornerRadius: CGFloat = Radius.card) -> some View {
-        modifier(AppCard(cornerRadius: cornerRadius))
+    func appCard(cornerRadius: CGFloat = Radius.card, fill: Color = .cardBg) -> some View {
+        modifier(AppCard(cornerRadius: cornerRadius, fill: fill))
     }
 }
 
