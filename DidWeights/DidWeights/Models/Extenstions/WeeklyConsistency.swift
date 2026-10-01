@@ -20,7 +20,14 @@ struct DayState: Identifiable, Equatable {
 
 
 struct WeeklyConsistency {
-    
+
+    // The weekly workout-days target is a device preference (Settings owns
+    // the control), not workout data — @AppStorage, keyed here so Settings
+    // and WeeklyConsistencySection can't disagree about the key or default.
+    static let goalStorageKey = "weeklyTarget.goalDays"
+    static let defaultGoal = 5
+    static let goalOptions = [3, 4, 5, 6, 7]
+
     static func dayStates(finishedWorkoutDates: [Date], now: Date, calendar: Calendar) throws -> [DayState] {
         
         let days = try calendar.weekDays(containing: now)

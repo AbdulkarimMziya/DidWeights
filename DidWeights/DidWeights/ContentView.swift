@@ -33,6 +33,10 @@ struct ContentView: View {
                 HistoryView()
             }
 
+            Tab("Settings", systemImage: "gearshape.fill") {
+                SettingsView()
+            }
+
         }
         .tint(Color.accentText)
     }

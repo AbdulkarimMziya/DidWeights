@@ -13,6 +13,10 @@ enum RestTimerPreset: CaseIterable, Identifiable {
     case ninetySeconds
     case twoMinutes
 
+    // Single source of truth for the preferred-duration key — RestTimerPickerSheet,
+    // SettingsView, and RestTimerModel's seed value all read/write this same key.
+    static let storageKey = "restTimer.preferredDuration"
+
     var id: Self { self }
 
     var duration: TimeInterval {
