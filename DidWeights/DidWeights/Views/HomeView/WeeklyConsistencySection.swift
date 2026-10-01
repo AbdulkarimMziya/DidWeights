@@ -13,7 +13,10 @@ struct WeeklyConsistencySection: View {
 
     private let now: Date
     private let calendar: Calendar
-    private let goal = 5
+
+    // Set from Settings; defaults and key live on WeeklyConsistency so this
+    // view and SettingsView can't disagree about either.
+    @AppStorage(WeeklyConsistency.goalStorageKey) private var goal = WeeklyConsistency.defaultGoal
 
     // NOTE: `now` and the query range are fixed when this view is created,
     // so they go stale at midnight. Step 7 handles that.

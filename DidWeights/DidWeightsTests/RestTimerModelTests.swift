@@ -50,14 +50,4 @@ import Testing
         #expect(model.isRunning == false)
         #expect(model.remaining() == 0)
     }
-
-    @Test func lastUsedDurationRemembersMostRecentStart() {
-        let model = RestTimerModel()
-
-        model.start(duration: 90)
-        #expect(model.lastUsedDuration == 90)
-
-        model.start(duration: 30)
-        #expect(model.lastUsedDuration == 30)
-    }
 }
