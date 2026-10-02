@@ -32,6 +32,9 @@ struct HistoryDetailView: View {
 private struct HistoryDetailContent: View {
     let workout: Workout
 
+    @AppStorage(WeightUnit.storageKey) private var weightUnitRaw = WeightUnit.pounds.rawValue
+    private var weightUnit: WeightUnit { WeightUnit.resolved(from: weightUnitRaw) }
+
     var body: some View {
         List {
             Section {
@@ -77,7 +80,10 @@ private struct HistoryDetailContent: View {
     private func setSummary(_ set: ExerciseSet) -> String {
         var parts: [String] = []
         if let reps = set.reps { parts.append("\(reps) reps") }
-        if let weight = set.weight { parts.append("\(weight.formatted(.number.precision(.fractionLength(0...1)))) lb") }
+        if let weight = set.weight {
+            let displayWeight = weightUnit.fromKilograms(weight)
+            parts.append("\(displayWeight.formatted(.number.precision(.fractionLength(0...1)))) \(weightUnit.abbreviation)")
+        }
         return parts.isEmpty ? "—" : parts.joined(separator: " · ")
     }
 

@@ -13,7 +13,7 @@ struct RestTimerPickerSheet: View {
     @Environment(\.dismiss) private var dismiss
 
     // A device setting, not workout data — @AppStorage, not SwiftData.
-    @AppStorage("restTimer.preferredDuration") private var preferredDuration: Double =
+    @AppStorage(RestTimerPreset.storageKey) private var preferredDuration: Double =
         RestTimerPreset.sixtySeconds.duration
 
     // Left unset so onAppear can seed it from @AppStorage.

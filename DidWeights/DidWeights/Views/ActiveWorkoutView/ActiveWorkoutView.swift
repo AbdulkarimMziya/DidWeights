@@ -67,6 +67,8 @@ struct ActiveWorkoutContent: View {
     @FocusState private var focusedField: Field?
 
     // Ephemeral session state, not domain data — never touches modelContext.
+    // Manual only — the user opens the timer icon and picks a duration
+    // themselves; nothing auto-starts it on set completion.
     @State private var restTimer = RestTimerModel()
     @State private var showRestTimerPicker = false
 
@@ -98,7 +100,6 @@ struct ActiveWorkoutContent: View {
                     ExerciseGroupView(
                         workout: workout,
                         group: group,
-                        restTimer: restTimer,
                         focusedField: $focusedField,
                         errorMessage: $errorMessage
                     )
@@ -242,7 +243,6 @@ struct ActiveWorkoutContent: View {
 struct ExerciseGroupView: View {
     let workout: Workout
     let group: ExerciseGroup
-    let restTimer: RestTimerModel
     @Environment(\.modelContext) private var modelContext
     @FocusState.Binding var focusedField: ActiveWorkoutContent.Field?
     @Binding var errorMessage: String?
@@ -286,7 +286,7 @@ struct ExerciseGroupView: View {
             .listRowBackground(Color.cardBg)
 
             ForEach(Array(group.sets.enumerated()), id: \.element.id) { index, set in
-                ExerciseSetRowView(set: set, index: index, restTimer: restTimer, focusedField: $focusedField)
+                ExerciseSetRowView(set: set, index: index, focusedField: $focusedField)
                     // tertiary is translucent in dark mode, so it goes over the card
                     // surface instead of replacing it.
                     .listRowBackground(
@@ -334,11 +334,14 @@ struct ExerciseGroupView: View {
 }
 
 struct SetHeaderView: View {
+    @AppStorage(WeightUnit.storageKey) private var weightUnitRaw = WeightUnit.pounds.rawValue
+    private var weightUnit: WeightUnit { WeightUnit.resolved(from: weightUnitRaw) }
+
     var body: some View {
         HStack(spacing: .halfX + .quarterX) {
             Text("SET").frame(width: SetColumn.index)
             Text("PREVIOUS").frame(maxWidth: .infinity)
-            Text("LBS").frame(width: SetColumn.weight)
+            Text(weightUnit.abbreviation.uppercased()).frame(width: SetColumn.weight)
             Text("REPS").frame(width: SetColumn.reps)
             Image(systemName: "checkmark")
                 .frame(width: SetColumn.check)
@@ -352,11 +355,24 @@ struct SetHeaderView: View {
 struct ExerciseSetRowView: View {
     @Bindable var set: ExerciseSet
     let index: Int
-    let restTimer: RestTimerModel
     @Environment(\.modelContext) private var modelContext
     @FocusState.Binding var focusedField: ActiveWorkoutContent.Field?
+    @AppStorage(WeightUnit.storageKey) private var weightUnitRaw = WeightUnit.pounds.rawValue
 
     private var workouts: WorkoutRepository { WorkoutRepository(context: modelContext) }
+    private var weightUnit: WeightUnit { WeightUnit.resolved(from: weightUnitRaw) }
+
+    // set.weight is always kilograms (the model's canonical unit). This
+    // binding is what the TextField actually reads/writes, converting to and
+    // from the display unit — the setter still assigns `set.weight` directly,
+    // so the existing .onChange(of: set.weight) write path below is untouched
+    // and the repository never sees anything but kilograms.
+    private var displayWeight: Binding<Double?> {
+        Binding(
+            get: { set.weight.map(weightUnit.fromKilograms) },
+            set: { set.weight = $0.map(weightUnit.toKilograms) }
+        )
+    }
 
     var body: some View {
         HStack(spacing: .halfX + .quarterX) {
@@ -370,8 +386,10 @@ struct ExerciseSetRowView: View {
                 .foregroundStyle(Color.secondaryTxt)
                 .frame(maxWidth: .infinity)
 
-            // @Bindable gives a direct binding to the model - no manual
-            TextField("0", value: $set.weight, format: .number)
+            // displayWeight converts kg <-> the current display unit; an
+            // explicit fraction length keeps the round trip from surfacing
+            // floating-point noise (poundsPerKilogram isn't bit-exact).
+            TextField("0", value: displayWeight, format: .number.precision(.fractionLength(0...1)))
                 .keyboardType(.decimalPad)
                 .focused($focusedField, equals: .weight(set.id))
                 .multilineTextAlignment(.center)
@@ -394,13 +412,7 @@ struct ExerciseSetRowView: View {
                 }
 
             Button {
-                let wasCompleted = set.isCompleted
                 try? workouts.toggleCompletion(of: set)
-                // Start rest only on the completing transition, and only if
-                // nothing's already counting down.
-                if !wasCompleted && set.isCompleted && !restTimer.isRunning {
-                    restTimer.start(duration: restTimer.lastUsedDuration)
-                }
             } label: {
                 ZStack {
                     RoundedRectangle(cornerRadius: .oneX, style: .continuous)

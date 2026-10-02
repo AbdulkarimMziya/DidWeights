@@ -18,15 +18,11 @@ enum RestTimerState: Equatable {
 final class RestTimerModel {
     private(set) var state: RestTimerState = .idle
 
-    /// Last duration started — the default for auto-start on set completion.
-    private(set) var lastUsedDuration: TimeInterval = RestTimerPreset.sixtySeconds.duration
-
     var isRunning: Bool {
         if case .running = state { true } else { false }
     }
 
     func start(duration: TimeInterval, now: Date = .now) {
-        lastUsedDuration = duration
         state = .running(endDate: now.addingTimeInterval(duration), duration: duration)
     }
 
